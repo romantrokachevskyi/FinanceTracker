@@ -4,6 +4,11 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#102a43">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="До зарплати">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="apple-touch-icon" href="icons/app-icon-180.png">
   <title>До зарплати</title>
   <style>
     :root{color-scheme:light;--ink:#102a43;--muted:#526f8a;--line:#d9e2ec;--surface:#fff;--soft:#f0f4f8;--brand:#0f766e;--brand-dark:#115e59;--good:#166534;--warn:#9a3412;--error:#b42318}
@@ -22,10 +27,12 @@
     .payday{text-align:center;background:var(--soft);padding:24px 18px;border-radius:18px;margin-bottom:16px}
     form{margin-top:18px}label{display:block;font-weight:680;margin:16px 0 7px}
     input{width:100%;min-height:48px;border:1px solid #71869a;border-radius:12px;padding:12px 14px;color:var(--ink);font:inherit;font-size:16px;background:var(--surface)}
-    input:focus-visible,button:focus-visible{outline:3px solid #0f766e;outline-offset:2px}input[aria-invalid="true"]{border-color:var(--error)}
+    input:focus-visible,button:focus-visible,.dialog-close:focus-visible{outline:3px solid #0f766e;outline-offset:2px}input[aria-invalid="true"]{border-color:var(--error)}
     .field-error{min-height:18px;margin:5px 0 0;color:var(--error);font-size:13px}.form-error{margin:12px 0 0;color:var(--error);font-size:14px;font-weight:650}
     button{width:100%;min-height:48px;margin-top:14px;border:0;border-radius:12px;padding:12px 16px;font:inherit;font-weight:750;cursor:pointer;background:var(--brand);color:#fff;touch-action:manipulation}
     button:hover{background:var(--brand-dark)}.secondary{background:var(--soft);color:var(--ink)}.secondary:hover{background:#d9e2ec}.quiet{background:transparent;color:var(--muted);margin-top:6px}.quiet:hover{background:var(--soft);color:var(--ink)}[hidden]{display:none!important}
+    .install-area{margin-top:18px;padding-top:4px;border-top:1px solid var(--line)}.install-button{background:var(--soft);color:var(--ink)}.install-button:hover{background:#d9e2ec}
+    dialog{width:min(calc(100% - 32px),398px);border:0;border-radius:20px;padding:24px;color:var(--ink);box-shadow:0 18px 60px rgba(16,42,67,.28)}dialog::backdrop{background:rgba(16,42,67,.55)}dialog h2{padding-right:38px}.dialog-close{position:absolute;top:12px;right:12px;width:44px;min-height:44px;margin:0;padding:0;border-radius:50%;background:transparent;color:var(--muted);font-size:28px;font-weight:400;line-height:1}.dialog-close:hover{background:var(--soft);color:var(--ink)}.install-steps{margin:18px 0 0;padding-left:24px;line-height:1.55}.install-steps li+li{margin-top:8px}
     @media(min-height:720px){body{place-items:center}}@media(max-width:480px){body{background:var(--surface);padding-top:max(16px,env(safe-area-inset-top))}.card{border-radius:0;box-shadow:none;padding-inline:4px}}
     @media(prefers-reduced-motion:no-preference){button{transition:background-color .15s ease,transform .08s ease}button:active{transform:scale(.99)}}
   </style>
@@ -87,7 +94,24 @@
         <button id="cancelPlan" class="secondary" type="button" hidden>Скасувати</button>
       </form>
     </section>
+
+    <section id="installArea" class="install-area" hidden>
+      <button id="installApp" class="install-button" type="button">Додати на головний екран</button>
+    </section>
   </main>
+
+  <dialog id="iosInstallDialog" aria-labelledby="iosInstallTitle">
+    <button id="closeInstallDialog" class="dialog-close" type="button" aria-label="Закрити">&times;</button>
+    <h2 id="iosInstallTitle">Додати на iPhone або iPad</h2>
+    <p class="muted small">iOS не дозволяє сайту запустити встановлення автоматично. Це можна зробити в Safari:</p>
+    <ol class="install-steps">
+      <li>Відкрийте цю сторінку в Safari.</li>
+      <li>Натисніть кнопку «Поділитися».</li>
+      <li>Прокрутіть меню й виберіть «На початковий екран».</li>
+      <li>Натисніть «Додати».</li>
+    </ol>
+    <button id="doneInstallDialog" type="button">Зрозуміло</button>
+  </dialog>
 
   <script>
     const KEY="financeTrackerStateV1";
@@ -102,9 +126,17 @@
       checkInBalance:$("checkInBalance"),checkInBalanceError:$("checkInBalanceError"),checkInFormError:$("checkInFormError"),
       dailyAmount:$("dailyAmount"),freshness:$("freshness"),staleNotice:$("staleNotice"),
       currentBalance:$("currentBalance"),plannedBalance:$("plannedBalance"),differenceRow:$("differenceRow"),
-      differenceLabel:$("differenceLabel"),difference:$("difference"),daysLeft:$("daysLeft")
+      differenceLabel:$("differenceLabel"),difference:$("difference"),daysLeft:$("daysLeft"),
+      installArea:$("installArea"),installApp:$("installApp"),iosInstallDialog:$("iosInstallDialog")
     };
-    let loadedState=null,rawStoredState=null,stateProblem=null;
+    let loadedState=null,rawStoredState=null,stateProblem=null,deferredInstallPrompt=null;
+
+    const isIOS=/iPad|iPhone|iPod/.test(navigator.userAgent)||(navigator.platform==="MacIntel"&&navigator.maxTouchPoints>1);
+    const isStandalone=window.matchMedia("(display-mode: standalone)").matches||navigator.standalone===true;
+
+    function updateInstallButton(){
+      el.installArea.hidden=isStandalone||(!isIOS&&!deferredInstallPrompt);
+    }
 
     function localDateString(date=new Date()){
       const y=date.getFullYear(),m=String(date.getMonth()+1).padStart(2,"0"),d=String(date.getDate()).padStart(2,"0");
@@ -263,6 +295,25 @@
     $("paydayNewPlan").addEventListener("click",()=>showPlanPanel({newPeriod:true}));
     el.retryStorage.addEventListener("click",()=>initialize(true));
     el.cancelPlan.addEventListener("click",()=>renderDashboard(true));
+    window.addEventListener("beforeinstallprompt",event=>{
+      event.preventDefault();deferredInstallPrompt=event;updateInstallButton();
+    });
+    window.addEventListener("appinstalled",()=>{
+      deferredInstallPrompt=null;el.installArea.hidden=true;
+    });
+    el.installApp.addEventListener("click",async()=>{
+      if(deferredInstallPrompt){
+        const prompt=deferredInstallPrompt;deferredInstallPrompt=null;
+        await prompt.prompt();updateInstallButton();return;
+      }
+      if(isIOS)el.iosInstallDialog.showModal();
+    });
+    $("closeInstallDialog").addEventListener("click",()=>el.iosInstallDialog.close());
+    $("doneInstallDialog").addEventListener("click",()=>el.iosInstallDialog.close());
+    el.iosInstallDialog.addEventListener("click",event=>{
+      if(event.target===el.iosInstallDialog)el.iosInstallDialog.close();
+    });
+    updateInstallButton();
     initialize();
   </script>
 </body>

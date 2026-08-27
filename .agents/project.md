@@ -7,6 +7,7 @@ work. The code remains authoritative when these notes disagree with it.
 
 - The app is a static site with no dependencies or build step.
 - `index.html` contains the markup, styles, and application script.
+- `manifest.webmanifest` and `icons/` provide the installable home-screen app metadata.
 - User data stays in browser `localStorage`; the app makes no network calls.
 - The interface language is Ukrainian and the primary viewport is mobile.
 
