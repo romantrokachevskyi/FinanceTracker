@@ -1,198 +1,269 @@
 <!doctype html>
 <html lang="uk">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <meta name="theme-color" content="#111827" />
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#102a43">
   <title>До зарплати</title>
   <style>
-    * { box-sizing: border-box; }
-    body {
-      margin: 0;
-      min-height: 100vh;
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      background: #f3f4f6;
-      color: #111827;
-      display: grid;
-      place-items: center;
-      padding: 24px;
-    }
-    .card {
-      width: min(100%, 430px);
-      background: white;
-      border-radius: 24px;
-      padding: 28px;
-      box-shadow: 0 12px 40px rgba(0,0,0,.08);
-    }
-    h1 { margin: 0 0 6px; font-size: 24px; }
-    .muted { color: #6b7280; margin: 0 0 26px; }
-    .result {
-      text-align: center;
-      padding: 28px 12px;
-      background: #f9fafb;
-      border-radius: 18px;
-      margin-bottom: 22px;
-    }
-    .result-label { color: #6b7280; font-size: 14px; }
-    .amount { font-size: 44px; font-weight: 750; margin: 8px 0; letter-spacing: -1.5px; }
-    .details { color: #6b7280; font-size: 14px; }
-    label { display: block; font-weight: 600; margin: 16px 0 7px; }
-    input {
-      width: 100%;
-      border: 1px solid #d1d5db;
-      border-radius: 12px;
-      padding: 13px 14px;
-      font: inherit;
-      background: white;
-    }
-    button {
-      width: 100%;
-      margin-top: 18px;
-      border: 0;
-      border-radius: 12px;
-      padding: 14px;
-      font: inherit;
-      font-weight: 700;
-      cursor: pointer;
-      background: #111827;
-      color: white;
-    }
-    .secondary {
-      margin-top: 10px;
-      background: transparent;
-      color: #6b7280;
-      font-weight: 600;
-    }
-    .hidden { display: none; }
+    :root{color-scheme:light;--ink:#102a43;--muted:#526f8a;--line:#d9e2ec;--surface:#fff;--soft:#f0f4f8;--brand:#0f766e;--brand-dark:#115e59;--good:#166534;--warn:#9a3412;--error:#b42318}
+    *{box-sizing:border-box}
+    body{margin:0;min-height:100vh;min-height:100dvh;font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:#eaf2f6;color:var(--ink);display:grid;place-items:start center;padding:max(20px,env(safe-area-inset-top)) max(16px,env(safe-area-inset-right)) max(20px,env(safe-area-inset-bottom)) max(16px,env(safe-area-inset-left))}
+    .card{width:min(100%,430px);background:var(--surface);border-radius:24px;padding:clamp(20px,6vw,28px);box-shadow:0 12px 40px rgba(16,42,67,.1)}
+    h1,h2,p{margin-top:0} h1{margin-bottom:6px;font-size:clamp(24px,7vw,30px);letter-spacing:-.02em} h2{margin-bottom:6px;font-size:20px}
+    .muted{color:var(--muted);margin-bottom:24px}.small{font-size:14px}
+    .hero{text-align:center;padding:24px 12px;background:linear-gradient(145deg,#edfdf9,#f7fafc);border:1px solid #ccfbf1;border-radius:18px;margin-bottom:16px}
+    .eyebrow{color:var(--muted);font-size:14px;font-weight:650}
+    .amount{font-size:clamp(36px,12vw,48px);font-weight:780;line-height:1.1;margin:8px 0;letter-spacing:-.04em;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+    .freshness{margin:0;color:var(--muted);font-size:13px}.freshness.stale{color:var(--warn);font-weight:650}
+    .stats{margin:0 0 16px;padding:4px 0;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+    .stat{display:flex;justify-content:space-between;gap:16px;padding:11px 0;font-size:14px}.stat dt{color:var(--muted)}.stat dd{margin:0;text-align:right;font-weight:700;font-variant-numeric:tabular-nums}.positive{color:var(--good)}.negative{color:var(--warn)}
+    .notice{border-radius:12px;background:#fff7ed;color:#7c2d12;padding:12px 14px;margin:0 0 16px;font-size:14px;line-height:1.45}
+    .payday{text-align:center;background:var(--soft);padding:24px 18px;border-radius:18px;margin-bottom:16px}
+    form{margin-top:18px}label{display:block;font-weight:680;margin:16px 0 7px}
+    input{width:100%;min-height:48px;border:1px solid #71869a;border-radius:12px;padding:12px 14px;color:var(--ink);font:inherit;font-size:16px;background:var(--surface)}
+    input:focus-visible,button:focus-visible{outline:3px solid #0f766e;outline-offset:2px}input[aria-invalid="true"]{border-color:var(--error)}
+    .field-error{min-height:18px;margin:5px 0 0;color:var(--error);font-size:13px}.form-error{margin:12px 0 0;color:var(--error);font-size:14px;font-weight:650}
+    button{width:100%;min-height:48px;margin-top:14px;border:0;border-radius:12px;padding:12px 16px;font:inherit;font-weight:750;cursor:pointer;background:var(--brand);color:#fff;touch-action:manipulation}
+    button:hover{background:var(--brand-dark)}.secondary{background:var(--soft);color:var(--ink)}.secondary:hover{background:#d9e2ec}.quiet{background:transparent;color:var(--muted);margin-top:6px}.quiet:hover{background:var(--soft);color:var(--ink)}[hidden]{display:none!important}
+    @media(min-height:720px){body{place-items:center}}@media(max-width:480px){body{background:var(--surface);padding-top:max(16px,env(safe-area-inset-top))}.card{border-radius:0;box-shadow:none;padding-inline:4px}}
+    @media(prefers-reduced-motion:no-preference){button{transition:background-color .15s ease,transform .08s ease}button:active{transform:scale(.99)}}
   </style>
 </head>
 <body>
   <main class="card">
-    <h1>До зарплати</h1>
-    <p class="muted">Скільки грошей мало б залишитися сьогодні</p>
+    <header><h1>До зарплати</h1><p class="muted">Контролюйте витрати до наступної зарплати</p></header>
 
-    <section id="result" class="result hidden">
-      <div class="result-label">Очікуваний залишок на сьогодні</div>
-      <div id="expected" class="amount">—</div>
-      <div id="details" class="details"></div>
+    <section id="dashboard" aria-live="polite" hidden>
+      <div id="activePlan">
+        <div class="hero">
+          <div class="eyebrow">Можна витрачати щодня</div>
+          <div id="dailyAmount" class="amount">—</div>
+          <p id="freshness" class="freshness"></p>
+        </div>
+        <p id="staleNotice" class="notice" hidden>Оновіть баланс, щоб побачити актуальний розрахунок і різницю з планом.</p>
+        <dl class="stats">
+          <div class="stat"><dt>Зараз на балансі</dt><dd id="currentBalance">—</dd></div>
+          <div class="stat"><dt>За планом на сьогодні</dt><dd id="plannedBalance">—</dd></div>
+          <div id="differenceRow" class="stat"><dt id="differenceLabel">Різниця з планом</dt><dd id="difference">—</dd></div>
+          <div class="stat"><dt>До зарплати</dt><dd id="daysLeft">—</dd></div>
+        </dl>
+        <button id="showCheckIn" type="button">Оновити баланс</button>
+        <button id="showNewPlan" class="quiet" type="button">Почати новий план</button>
+      </div>
+      <div id="payday" class="payday" hidden>
+        <h2 id="paydayTitle" tabindex="-1">Настав день зарплати</h2>
+        <p class="muted small">Вкажіть новий баланс і наступну дату зарплати.</p>
+        <button id="paydayNewPlan" type="button">Почати новий період</button>
+      </div>
     </section>
 
-    <div id="setup">
-      <label for="balance">Скільки грошей є зараз</label>
-      <input id="balance" type="number" min="0" step="0.01" inputmode="decimal" placeholder="Наприклад, 30000" />
+    <section id="checkInPanel" hidden>
+      <h2 id="checkInTitle" tabindex="-1">Оновити баланс</h2>
+      <p class="muted small">Початковий план і дата зарплати не зміняться.</p>
+      <form id="checkInForm" novalidate>
+        <label for="checkInBalance">Скільки грошей є зараз?</label>
+        <input id="checkInBalance" type="number" min="0" step="0.01" inputmode="decimal" enterkeyhint="done" aria-describedby="checkInBalanceError">
+        <p id="checkInBalanceError" class="field-error"></p>
+        <p id="checkInFormError" class="form-error" role="alert"></p>
+        <button type="submit">Зберегти баланс</button>
+        <button id="cancelCheckIn" class="secondary" type="button">Скасувати</button>
+      </form>
+    </section>
 
-      <label for="salaryDate">Наступна зарплата</label>
-      <input id="salaryDate" type="date" />
-
-      <button id="save">Зберегти</button>
-    </div>
-
-    <button id="edit" class="secondary hidden">Змінити дані</button>
+    <section id="planPanel">
+      <h2 id="planTitle" tabindex="-1">Створити план</h2>
+      <p id="planHint" class="muted small">Дані зберігаються лише на цьому пристрої.</p>
+      <form id="planForm" novalidate>
+        <label for="balance">Баланс зараз</label>
+        <input id="balance" type="number" min="0" step="0.01" inputmode="decimal" enterkeyhint="next" aria-describedby="balanceError" placeholder="Наприклад, 30000">
+        <p id="balanceError" class="field-error"></p>
+        <label for="salaryDate">Наступна зарплата</label>
+        <input id="salaryDate" type="date" aria-describedby="salaryDateError">
+        <p id="salaryDateError" class="field-error"></p>
+        <p id="planFormError" class="form-error" role="alert"></p>
+        <button id="savePlan" type="submit">Створити план</button>
+        <button id="retryStorage" class="secondary" type="button" hidden>Спробувати ще раз</button>
+        <button id="cancelPlan" class="secondary" type="button" hidden>Скасувати</button>
+      </form>
+    </section>
   </main>
 
   <script>
-    const KEY = "financeTrackerStateV1";
-    const balanceEl = document.getElementById("balance");
-    const salaryDateEl = document.getElementById("salaryDate");
-    const setupEl = document.getElementById("setup");
-    const resultEl = document.getElementById("result");
-    const expectedEl = document.getElementById("expected");
-    const detailsEl = document.getElementById("details");
-    const editEl = document.getElementById("edit");
+    const KEY="financeTrackerStateV1";
+    const BACKUP_KEY="financeTrackerStateV1Backup";
+    const $=id=>document.getElementById(id);
+    const el={
+      dashboard:$("dashboard"),activePlan:$("activePlan"),payday:$("payday"),
+      planPanel:$("planPanel"),planTitle:$("planTitle"),planHint:$("planHint"),planForm:$("planForm"),
+      balance:$("balance"),salaryDate:$("salaryDate"),balanceError:$("balanceError"),
+      salaryDateError:$("salaryDateError"),planFormError:$("planFormError"),savePlan:$("savePlan"),retryStorage:$("retryStorage"),cancelPlan:$("cancelPlan"),
+      checkInPanel:$("checkInPanel"),checkInTitle:$("checkInTitle"),checkInForm:$("checkInForm"),
+      checkInBalance:$("checkInBalance"),checkInBalanceError:$("checkInBalanceError"),checkInFormError:$("checkInFormError"),
+      dailyAmount:$("dailyAmount"),freshness:$("freshness"),staleNotice:$("staleNotice"),
+      currentBalance:$("currentBalance"),plannedBalance:$("plannedBalance"),differenceRow:$("differenceRow"),
+      differenceLabel:$("differenceLabel"),difference:$("difference"),daysLeft:$("daysLeft")
+    };
+    let loadedState=null,rawStoredState=null,stateProblem=null;
 
-    function localDateString(date) {
-      const y = date.getFullYear();
-      const m = String(date.getMonth() + 1).padStart(2, "0");
-      const d = String(date.getDate()).padStart(2, "0");
+    function localDateString(date=new Date()){
+      const y=date.getFullYear(),m=String(date.getMonth()+1).padStart(2,"0"),d=String(date.getDate()).padStart(2,"0");
       return `${y}-${m}-${d}`;
     }
-
-    function defaultSalaryDate() {
-      const now = new Date();
-      let date = new Date(now.getFullYear(), now.getMonth(), 25);
-      if (now.getDate() >= 25) date = new Date(now.getFullYear(), now.getMonth() + 1, 25);
+    function parseDateParts(value){
+      if(typeof value!=="string"||!/^\d{4}-\d{2}-\d{2}$/.test(value))return null;
+      const [year,month,day]=value.split("-").map(Number),date=new Date(Date.UTC(year,month-1,day));
+      return date.getUTCFullYear()===year&&date.getUTCMonth()===month-1&&date.getUTCDate()===day?{year,month,day}:null;
+    }
+    function dateOrdinal(value){const p=parseDateParts(value);return p?Date.UTC(p.year,p.month-1,p.day)/86400000:null}
+    function daysBetween(from,to){return Math.max(0,dateOrdinal(to)-dateOrdinal(from))}
+    function defaultSalaryDate(){
+      const now=new Date(),date=new Date(now.getFullYear(),now.getMonth(),25);
+      if(localDateString(date)<=localDateString(now))date.setMonth(date.getMonth()+1);
       return localDateString(date);
     }
-
-    function parseLocalDate(s) {
-      const [y,m,d] = s.split("-").map(Number);
-      return new Date(y, m - 1, d);
+    function isValidState(value){
+      return Boolean(value&&!Array.isArray(value)&&typeof value==="object"&&Number.isFinite(value.balance)&&value.balance>=0&&
+        dateOrdinal(value.startDate)!==null&&dateOrdinal(value.salaryDate)!==null&&dateOrdinal(value.salaryDate)>dateOrdinal(value.startDate)&&
+        (value.currentBalance===undefined||(Number.isFinite(value.currentBalance)&&value.currentBalance>=0))&&
+        (value.currentBalanceDate===undefined||dateOrdinal(value.currentBalanceDate)!==null));
     }
-
-    function dayDiff(a, b) {
-      const start = new Date(a.getFullYear(), a.getMonth(), a.getDate());
-      const end = new Date(b.getFullYear(), b.getMonth(), b.getDate());
-      return Math.max(0, Math.round((end - start) / 86400000));
+    function readState(){
+      try{
+        const raw=localStorage.getItem(KEY);rawStoredState=raw;
+        if(raw===null)return{state:null,problem:null};
+        const parsed=JSON.parse(raw);
+        return isValidState(parsed)?{state:parsed,problem:null}:{state:null,problem:"invalid"};
+      }catch(error){return{state:null,problem:error instanceof SyntaxError?"invalid":"storage"}}
     }
-
-    function money(n) {
-      return new Intl.NumberFormat("uk-UA", {
-        maximumFractionDigits: 0
-      }).format(Math.max(0, n)) + " ₴";
+    function persistState(nextState,backupInvalid=false){
+      try{
+        if(backupInvalid&&rawStoredState!==null){
+          let backupKey=BACKUP_KEY,suffix=0;
+          while(localStorage.getItem(backupKey)!==null)backupKey=`${BACKUP_KEY}:${Date.now()}:${suffix++}`;
+          localStorage.setItem(backupKey,rawStoredState);
+        }
+        const serialized=JSON.stringify(nextState);
+        localStorage.setItem(KEY,serialized);
+        rawStoredState=serialized;loadedState=nextState;stateProblem=null;return true;
+      }catch(error){return false}
     }
-
-    function render() {
-      const state = JSON.parse(localStorage.getItem(KEY) || "null");
-      if (!state) {
-        salaryDateEl.value = defaultSalaryDate();
-        setupEl.classList.remove("hidden");
-        resultEl.classList.add("hidden");
-        editEl.classList.add("hidden");
-        return;
+    function money(value){
+      return new Intl.NumberFormat("uk-UA",{minimumFractionDigits:Number.isInteger(value)?0:2,maximumFractionDigits:2}).format(Math.max(0,value))+" ₴";
+    }
+    function dayWord(value){
+      const mod100=value%100,mod10=value%10;
+      if(mod100>=11&&mod100<=14)return"днів";
+      if(mod10===1)return"день";
+      if(mod10>=2&&mod10<=4)return"дні";
+      return"днів";
+    }
+    function freshnessText(date,today){
+      const ago=daysBetween(date,today);
+      if(ago===0)return"Оновлено сьогодні";
+      if(ago===1)return"Оновлено вчора";
+      return `Оновлено ${ago} ${dayWord(ago)} тому`;
+    }
+    function clearErrors(formName){
+      if(formName==="plan"){
+        el.balanceError.textContent="";el.salaryDateError.textContent="";el.planFormError.textContent="";
+        el.balance.removeAttribute("aria-invalid");el.salaryDate.removeAttribute("aria-invalid");
+      }else{
+        el.checkInBalanceError.textContent="";el.checkInFormError.textContent="";el.checkInBalance.removeAttribute("aria-invalid");
       }
-
-      const start = parseLocalDate(state.startDate);
-      const salary = parseLocalDate(state.salaryDate);
-      const today = new Date();
-
-      const totalDays = Math.max(1, dayDiff(start, salary));
-      const daysLeft = dayDiff(today, salary);
-      const dailyBudget = state.balance / totalDays;
-      const expected = today >= salary ? 0 : dailyBudget * daysLeft;
-
-      expectedEl.textContent = money(expected);
-      detailsEl.textContent = today >= salary
-        ? "Сьогодні вже дата зарплати — час оновити дані."
-        : `${daysLeft} дн. до зарплати · ${money(dailyBudget)} на день`;
-
-      setupEl.classList.add("hidden");
-      resultEl.classList.remove("hidden");
-      editEl.classList.remove("hidden");
+    }
+    function showOnly(panel){
+      el.dashboard.hidden=panel!=="dashboard";el.planPanel.hidden=panel!=="plan";el.checkInPanel.hidden=panel!=="checkIn";
+    }
+    function showPlanPanel({newPeriod=false,invalid=false}={}){
+      showOnly("plan");clearErrors("plan");
+      const tomorrow=new Date();tomorrow.setDate(tomorrow.getDate()+1);el.salaryDate.min=localDateString(tomorrow);
+      el.planTitle.textContent=newPeriod?"Почати новий план":"Створити план";
+      el.savePlan.textContent=newPeriod?"Почати новий план":"Створити план";
+      el.savePlan.disabled=false;el.retryStorage.hidden=true;
+      el.cancelPlan.hidden=!loadedState;
+      el.planHint.textContent=invalid
+        ?"Збережені дані пошкоджені. Новий план замінить їх, а оригінал залишиться в резервній копії на цьому пристрої."
+        :"Дані зберігаються лише на цьому пристрої.";
+      if(newPeriod&&loadedState){
+        el.balance.value=String(loadedState.currentBalance??loadedState.balance);el.salaryDate.value=defaultSalaryDate();
+      }else if(!el.salaryDate.value||el.salaryDate.value<=localDateString())el.salaryDate.value=defaultSalaryDate();
+      el.planTitle.focus();
+    }
+    function renderDashboard(focus=false){
+      if(!loadedState)return;
+      const today=localDateString(),totalDays=Math.max(1,daysBetween(loadedState.startDate,loadedState.salaryDate));
+      const remainingDays=daysBetween(today,loadedState.salaryDate);
+      showOnly("dashboard");
+      if(remainingDays===0){
+        el.activePlan.hidden=true;el.payday.hidden=false;if(focus)$("paydayTitle").focus();return;
+      }
+      el.activePlan.hidden=false;el.payday.hidden=true;
+      const actual=loadedState.currentBalance??loadedState.balance;
+      const updateDate=loadedState.currentBalanceDate??loadedState.startDate;
+      const hasCheckInToday=updateDate===today;
+      const expected=loadedState.balance*Math.min(1,remainingDays/totalDays),daily=actual/remainingDays,delta=actual-expected;
+      el.dailyAmount.textContent=hasCheckInToday?money(daily):"—";el.currentBalance.textContent=money(actual);el.plannedBalance.textContent=money(expected);
+      el.daysLeft.textContent=`${remainingDays} ${dayWord(remainingDays)}`;
+      el.freshness.textContent=freshnessText(updateDate,today);el.freshness.classList.toggle("stale",!hasCheckInToday);
+      el.staleNotice.hidden=hasCheckInToday;el.differenceRow.hidden=!hasCheckInToday;
+      if(hasCheckInToday){
+        const hasBuffer=delta>=0;
+        el.differenceLabel.textContent=hasBuffer?"Є запас":"Понад план";
+        el.difference.textContent=money(Math.abs(delta));el.difference.className=hasBuffer?"positive":"negative";
+      }
+      if(focus){el.dailyAmount.setAttribute("tabindex","-1");el.dailyAmount.focus()}
+    }
+    function initialize(focusOnSuccess=false){
+      const result=readState();loadedState=result.state;stateProblem=result.problem;
+      if(loadedState)renderDashboard(focusOnSuccess);else showPlanPanel({invalid:stateProblem==="invalid"});
+      if(stateProblem==="storage"){
+        el.planHint.textContent="Не вдалося прочитати локальні дані. Щоб не перезаписати їх, створення нового плану заблоковано.";
+        el.savePlan.disabled=true;el.retryStorage.hidden=false;
+      }
     }
 
-    document.getElementById("save").addEventListener("click", () => {
-      const balance = Number(balanceEl.value);
-      const salaryDate = salaryDateEl.value;
-      if (!Number.isFinite(balance) || balance < 0 || !salaryDate) {
-        alert("Введи суму та дату зарплати.");
-        return;
+    el.planForm.addEventListener("submit",event=>{
+      event.preventDefault();clearErrors("plan");
+      if(stateProblem==="storage"){
+        el.planFormError.textContent="Спочатку відновіть доступ до локальних даних.";return;
       }
-      const today = new Date();
-      const salary = parseLocalDate(salaryDate);
-      if (salary <= new Date(today.getFullYear(), today.getMonth(), today.getDate())) {
-        alert("Дата зарплати має бути в майбутньому.");
-        return;
+      const rawBalance=el.balance.value.trim(),balance=Number(rawBalance),salaryDate=el.salaryDate.value,today=localDateString();
+      let firstInvalid=null;
+      if(!rawBalance||!Number.isFinite(balance)||balance<0){
+        el.balanceError.textContent="Вкажіть коректний баланс.";el.balance.setAttribute("aria-invalid","true");firstInvalid=el.balance;
       }
-      localStorage.setItem(KEY, JSON.stringify({
-        balance,
-        salaryDate,
-        startDate: localDateString(today)
-      }));
-      render();
+      if(dateOrdinal(salaryDate)===null){
+        el.salaryDateError.textContent="Вкажіть дату зарплати.";el.salaryDate.setAttribute("aria-invalid","true");firstInvalid||=el.salaryDate;
+      }else if(dateOrdinal(salaryDate)<=dateOrdinal(today)){
+        el.salaryDateError.textContent="Дата зарплати має бути пізніше за сьогодні.";el.salaryDate.setAttribute("aria-invalid","true");firstInvalid||=el.salaryDate;
+      }
+      if(firstInvalid){firstInvalid.focus();return}
+      const nextState={...(loadedState||{}),balance,salaryDate,startDate:today,currentBalance:balance,currentBalanceDate:today,schemaVersion:2};
+      if(!persistState(nextState,stateProblem==="invalid")){
+        el.planFormError.textContent="Не вдалося зберегти дані. Звільніть місце або дозвольте локальне сховище й спробуйте ще раз.";return;
+      }
+      renderDashboard(true);
     });
-
-    editEl.addEventListener("click", () => {
-      const state = JSON.parse(localStorage.getItem(KEY) || "null");
-      if (state) {
-        balanceEl.value = state.balance;
-        salaryDateEl.value = state.salaryDate;
-      }
-      setupEl.classList.remove("hidden");
-      resultEl.classList.add("hidden");
-      editEl.classList.add("hidden");
+    $("showCheckIn").addEventListener("click",()=>{
+      showOnly("checkIn");clearErrors("checkIn");el.checkInBalance.value=String(loadedState.currentBalance??loadedState.balance);el.checkInTitle.focus();
     });
-
-    render();
+    el.checkInForm.addEventListener("submit",event=>{
+      event.preventDefault();clearErrors("checkIn");
+      const rawBalance=el.checkInBalance.value.trim(),currentBalance=Number(rawBalance);
+      if(!rawBalance||!Number.isFinite(currentBalance)||currentBalance<0){
+        el.checkInBalanceError.textContent="Вкажіть коректний баланс.";el.checkInBalance.setAttribute("aria-invalid","true");el.checkInBalance.focus();return;
+      }
+      const nextState={...loadedState,currentBalance,currentBalanceDate:localDateString(),schemaVersion:2};
+      if(!persistState(nextState)){el.checkInFormError.textContent="Не вдалося зберегти баланс. Попередні дані не змінено.";return}
+      renderDashboard(true);
+    });
+    $("cancelCheckIn").addEventListener("click",()=>renderDashboard(true));
+    $("showNewPlan").addEventListener("click",()=>showPlanPanel({newPeriod:true}));
+    $("paydayNewPlan").addEventListener("click",()=>showPlanPanel({newPeriod:true}));
+    el.retryStorage.addEventListener("click",()=>initialize(true));
+    el.cancelPlan.addEventListener("click",()=>renderDashboard(true));
+    initialize();
   </script>
 </body>
 </html>
