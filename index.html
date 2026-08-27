@@ -1,0 +1,198 @@
+<!doctype html>
+<html lang="uk">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#111827" />
+  <title>До зарплати</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #f3f4f6;
+      color: #111827;
+      display: grid;
+      place-items: center;
+      padding: 24px;
+    }
+    .card {
+      width: min(100%, 430px);
+      background: white;
+      border-radius: 24px;
+      padding: 28px;
+      box-shadow: 0 12px 40px rgba(0,0,0,.08);
+    }
+    h1 { margin: 0 0 6px; font-size: 24px; }
+    .muted { color: #6b7280; margin: 0 0 26px; }
+    .result {
+      text-align: center;
+      padding: 28px 12px;
+      background: #f9fafb;
+      border-radius: 18px;
+      margin-bottom: 22px;
+    }
+    .result-label { color: #6b7280; font-size: 14px; }
+    .amount { font-size: 44px; font-weight: 750; margin: 8px 0; letter-spacing: -1.5px; }
+    .details { color: #6b7280; font-size: 14px; }
+    label { display: block; font-weight: 600; margin: 16px 0 7px; }
+    input {
+      width: 100%;
+      border: 1px solid #d1d5db;
+      border-radius: 12px;
+      padding: 13px 14px;
+      font: inherit;
+      background: white;
+    }
+    button {
+      width: 100%;
+      margin-top: 18px;
+      border: 0;
+      border-radius: 12px;
+      padding: 14px;
+      font: inherit;
+      font-weight: 700;
+      cursor: pointer;
+      background: #111827;
+      color: white;
+    }
+    .secondary {
+      margin-top: 10px;
+      background: transparent;
+      color: #6b7280;
+      font-weight: 600;
+    }
+    .hidden { display: none; }
+  </style>
+</head>
+<body>
+  <main class="card">
+    <h1>До зарплати</h1>
+    <p class="muted">Скільки грошей мало б залишитися сьогодні</p>
+
+    <section id="result" class="result hidden">
+      <div class="result-label">Очікуваний залишок на сьогодні</div>
+      <div id="expected" class="amount">—</div>
+      <div id="details" class="details"></div>
+    </section>
+
+    <div id="setup">
+      <label for="balance">Скільки грошей є зараз</label>
+      <input id="balance" type="number" min="0" step="0.01" inputmode="decimal" placeholder="Наприклад, 30000" />
+
+      <label for="salaryDate">Наступна зарплата</label>
+      <input id="salaryDate" type="date" />
+
+      <button id="save">Зберегти</button>
+    </div>
+
+    <button id="edit" class="secondary hidden">Змінити дані</button>
+  </main>
+
+  <script>
+    const KEY = "financeTrackerStateV1";
+    const balanceEl = document.getElementById("balance");
+    const salaryDateEl = document.getElementById("salaryDate");
+    const setupEl = document.getElementById("setup");
+    const resultEl = document.getElementById("result");
+    const expectedEl = document.getElementById("expected");
+    const detailsEl = document.getElementById("details");
+    const editEl = document.getElementById("edit");
+
+    function localDateString(date) {
+      const y = date.getFullYear();
+      const m = String(date.getMonth() + 1).padStart(2, "0");
+      const d = String(date.getDate()).padStart(2, "0");
+      return `${y}-${m}-${d}`;
+    }
+
+    function defaultSalaryDate() {
+      const now = new Date();
+      let date = new Date(now.getFullYear(), now.getMonth(), 25);
+      if (now.getDate() >= 25) date = new Date(now.getFullYear(), now.getMonth() + 1, 25);
+      return localDateString(date);
+    }
+
+    function parseLocalDate(s) {
+      const [y,m,d] = s.split("-").map(Number);
+      return new Date(y, m - 1, d);
+    }
+
+    function dayDiff(a, b) {
+      const start = new Date(a.getFullYear(), a.getMonth(), a.getDate());
+      const end = new Date(b.getFullYear(), b.getMonth(), b.getDate());
+      return Math.max(0, Math.round((end - start) / 86400000));
+    }
+
+    function money(n) {
+      return new Intl.NumberFormat("uk-UA", {
+        maximumFractionDigits: 0
+      }).format(Math.max(0, n)) + " ₴";
+    }
+
+    function render() {
+      const state = JSON.parse(localStorage.getItem(KEY) || "null");
+      if (!state) {
+        salaryDateEl.value = defaultSalaryDate();
+        setupEl.classList.remove("hidden");
+        resultEl.classList.add("hidden");
+        editEl.classList.add("hidden");
+        return;
+      }
+
+      const start = parseLocalDate(state.startDate);
+      const salary = parseLocalDate(state.salaryDate);
+      const today = new Date();
+
+      const totalDays = Math.max(1, dayDiff(start, salary));
+      const daysLeft = dayDiff(today, salary);
+      const dailyBudget = state.balance / totalDays;
+      const expected = today >= salary ? 0 : dailyBudget * daysLeft;
+
+      expectedEl.textContent = money(expected);
+      detailsEl.textContent = today >= salary
+        ? "Сьогодні вже дата зарплати — час оновити дані."
+        : `${daysLeft} дн. до зарплати · ${money(dailyBudget)} на день`;
+
+      setupEl.classList.add("hidden");
+      resultEl.classList.remove("hidden");
+      editEl.classList.remove("hidden");
+    }
+
+    document.getElementById("save").addEventListener("click", () => {
+      const balance = Number(balanceEl.value);
+      const salaryDate = salaryDateEl.value;
+      if (!Number.isFinite(balance) || balance < 0 || !salaryDate) {
+        alert("Введи суму та дату зарплати.");
+        return;
+      }
+      const today = new Date();
+      const salary = parseLocalDate(salaryDate);
+      if (salary <= new Date(today.getFullYear(), today.getMonth(), today.getDate())) {
+        alert("Дата зарплати має бути в майбутньому.");
+        return;
+      }
+      localStorage.setItem(KEY, JSON.stringify({
+        balance,
+        salaryDate,
+        startDate: localDateString(today)
+      }));
+      render();
+    });
+
+    editEl.addEventListener("click", () => {
+      const state = JSON.parse(localStorage.getItem(KEY) || "null");
+      if (state) {
+        balanceEl.value = state.balance;
+        salaryDateEl.value = state.salaryDate;
+      }
+      setupEl.classList.remove("hidden");
+      resultEl.classList.add("hidden");
+      editEl.classList.add("hidden");
+    });
+
+    render();
+  </script>
+</body>
+</html>
