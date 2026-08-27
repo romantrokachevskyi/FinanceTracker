@@ -1,4 +1,5 @@
 import { readFile } from "node:fs/promises";
+import { checkBehavior } from "./behavior-check.mjs";
 
 const files = {
   html: new URL("../index.html", import.meta.url),
@@ -22,6 +23,9 @@ requireMatch(/viewport-fit=cover/, "mobile viewport must preserve safe-area supp
 requireMatch(/const KEY="financeTrackerStateV1"/, "primary storage key changed");
 requireMatch(/Date\.UTC\(/, "calendar calculations must remain DST-safe");
 requireMatch(/<form\b/, "interactive inputs must retain form semantics");
+requireMatch(/id="showCheckIn"[^>]+aria-controls="checkInPanel"/, "balance check-in must remain an inline disclosure");
+requireMatch(/id="checkInBalance"[^>]+aria-describedby="[^"]*previousBalance[^"]*checkInPreview"/, "balance context and preview must remain accessible");
+requireMatch(/checkInForm\.requestSubmit\(\)/, "mobile keyboard submission must remain explicit");
 
 if (content.claude.trim() !== "@AGENTS.md") {
   failures.push("CLAUDE.md must remain a thin import of AGENTS.md");
@@ -51,6 +55,8 @@ for (const [, source] of scripts) {
     failures.push(`JavaScript syntax error: ${error.message}`);
   }
 }
+
+if (scripts.length === 1) failures.push(...checkBehavior(scripts[0][1]));
 
 if (failures.length) {
   console.error(failures.map((failure) => `- ${failure}`).join("\n"));

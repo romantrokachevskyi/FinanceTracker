@@ -21,6 +21,9 @@ work. The code remains authoritative when these notes disagree with it.
 A stale balance must not produce an actionable daily allowance or an
 ahead/behind status. Prompt the user to check in first.
 
+The balance check-in expands within the dashboard, previews the resulting
+daily allowance, and does not mutate state until the form is submitted.
+
 ## Local state contract
 
 Primary key: `financeTrackerStateV1`.
