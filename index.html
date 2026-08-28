@@ -20,10 +20,9 @@
     .hero{text-align:center;padding:24px 12px;background:linear-gradient(145deg,#edfdf9,#f7fafc);border:1px solid #ccfbf1;border-radius:18px;margin-bottom:16px}
     .eyebrow{color:var(--muted);font-size:14px;font-weight:650}
     .amount{font-size:clamp(36px,12vw,48px);font-weight:780;line-height:1.1;margin:8px 0;letter-spacing:-.04em;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
-    .freshness{margin:0;color:var(--muted);font-size:13px}.freshness.stale{color:var(--warn);font-weight:650}
+    .freshness{margin:0;color:var(--muted);font-size:13px}
     .stats{margin:0 0 16px;padding:4px 0;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
     .stat{display:flex;justify-content:space-between;gap:16px;padding:11px 0;font-size:14px}.stat dt{color:var(--muted)}.stat dd{margin:0;text-align:right;font-weight:700;font-variant-numeric:tabular-nums}.positive{color:var(--good)}.negative{color:var(--warn)}
-    .notice{border-radius:12px;background:#fff7ed;color:#7c2d12;padding:12px 14px;margin:0 0 16px;font-size:14px;line-height:1.45}
     .inline-panel{margin:12px 0 4px;padding:16px;background:var(--soft);border-radius:16px}.inline-panel form{margin-top:10px}.inline-panel label{margin-top:0}.previous-value{margin-bottom:12px}.preview{margin:10px 0 0;padding:10px 12px;border-radius:10px;background:#e6fffa;color:var(--ink);font-size:14px;font-weight:650;line-height:1.4}.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
     .payday{text-align:center;background:var(--soft);padding:24px 18px;border-radius:18px;margin-bottom:16px}
     form{margin-top:18px}label{display:block;font-weight:680;margin:16px 0 7px}
@@ -49,7 +48,6 @@
           <div id="dailyAmount" class="amount">—</div>
           <p id="freshness" class="freshness"></p>
         </div>
-        <p id="staleNotice" class="notice" hidden>Оновіть баланс, щоб побачити актуальний розрахунок і різницю з планом.</p>
         <dl class="stats">
           <div class="stat"><dt>Зараз на балансі</dt><dd id="currentBalance">—</dd></div>
           <div class="stat"><dt>За планом на сьогодні</dt><dd id="plannedBalance">—</dd></div>
@@ -127,7 +125,7 @@
       checkInPanel:$("checkInPanel"),checkInForm:$("checkInForm"),showCheckIn:$("showCheckIn"),
       checkInBalance:$("checkInBalance"),checkInBalanceError:$("checkInBalanceError"),checkInFormError:$("checkInFormError"),
       checkInPreview:$("checkInPreview"),previousBalance:$("previousBalance"),statusMessage:$("statusMessage"),
-      dailyAmount:$("dailyAmount"),freshness:$("freshness"),staleNotice:$("staleNotice"),
+      dailyAmount:$("dailyAmount"),freshness:$("freshness"),
       currentBalance:$("currentBalance"),plannedBalance:$("plannedBalance"),differenceRow:$("differenceRow"),
       differenceLabel:$("differenceLabel"),difference:$("difference"),daysLeft:$("daysLeft"),
       installArea:$("installArea"),installApp:$("installApp"),iosInstallDialog:$("iosInstallDialog")
@@ -248,17 +246,13 @@
       el.activePlan.hidden=false;el.payday.hidden=true;
       const actual=loadedState.currentBalance??loadedState.balance;
       const updateDate=loadedState.currentBalanceDate??loadedState.startDate;
-      const hasCheckInToday=updateDate===today;
       const expected=loadedState.balance*Math.min(1,remainingDays/totalDays),daily=actual/remainingDays,delta=actual-expected;
-      el.dailyAmount.textContent=hasCheckInToday?money(daily):"—";el.currentBalance.textContent=money(actual);el.plannedBalance.textContent=money(expected);
+      el.dailyAmount.textContent=money(daily);el.currentBalance.textContent=money(actual);el.plannedBalance.textContent=money(expected);
       el.daysLeft.textContent=`${remainingDays} ${dayWord(remainingDays)}`;
-      el.freshness.textContent=freshnessText(updateDate,today);el.freshness.classList.toggle("stale",!hasCheckInToday);
-      el.staleNotice.hidden=hasCheckInToday;el.differenceRow.hidden=!hasCheckInToday;
-      if(hasCheckInToday){
-        const hasBuffer=delta>=0;
-        el.differenceLabel.textContent=hasBuffer?"Є запас":"Понад план";
-        el.difference.textContent=money(Math.abs(delta));el.difference.className=hasBuffer?"positive":"negative";
-      }
+      el.freshness.textContent=freshnessText(updateDate,today);
+      const hasBuffer=delta>=0;
+      el.differenceLabel.textContent=hasBuffer?"Є запас":"Понад план";
+      el.difference.textContent=money(Math.abs(delta));el.difference.className=hasBuffer?"positive":"negative";
       if(focus){el.dailyAmount.setAttribute("tabindex","-1");el.dailyAmount.focus()}
     }
     function initialize(focusOnSuccess=false){

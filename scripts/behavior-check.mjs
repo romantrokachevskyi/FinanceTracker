@@ -70,6 +70,14 @@ export function checkBehavior(source) {
     requireBehavior(parseMoney(input) === null, `money input should reject ${JSON.stringify(input)}`);
   }
 
+  const staleState = { ...activeState, currentBalanceDate: localDate(-1) };
+  const staleApp = createAppHarness(source, staleState);
+  requireBehavior(staleApp.element("dailyAmount").textContent !== "—", "saved balance must keep producing a daily allowance until updated");
+  requireBehavior(staleApp.element("dailyAmount").textContent.includes("₴"), "saved balance allowance must render as money");
+  requireBehavior(!staleApp.element("differenceRow").hidden, "saved balance must keep showing the difference from plan");
+  requireBehavior(staleApp.element("difference").textContent.includes("₴"), "saved balance difference must render as money");
+  requireBehavior(staleApp.element("freshness").textContent.includes("вчора"), "saved balance age must remain visible");
+
   const checkIn = app.element("checkInBalance");
   checkIn.value = "8 500,25";
   checkIn.dispatch("input");
