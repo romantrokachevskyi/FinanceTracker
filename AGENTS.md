@@ -5,7 +5,7 @@ Vendor adapters must reference it, not duplicate it.
 
 ## Product
 
-FinanceTracker is an offline, Ukrainian-language, mobile-first web app that
+FinanceTracker is an offline, Ukrainian-first bilingual, mobile-first web app that
 answers one question: how much can the user safely spend each day until payday?
 
 ## Start here
@@ -26,7 +26,7 @@ answers one question: how much can the user safely spend each day until payday?
 - Keep malformed data recoverable before an explicit replacement.
 - Keep the app offline and private: no telemetry, accounts, or network calls
   unless a product requirement explicitly changes that boundary.
-- Keep Ukrainian UI copy consistent and optimize for narrow touch screens.
+- Keep Ukrainian and English UI copy consistent and optimize for narrow touch screens.
 - Maintain keyboard access, visible focus, inline errors, and WCAG AA contrast.
 
 ## Engineering agreements

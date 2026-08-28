@@ -17,6 +17,7 @@
     .card{width:min(100%,430px);background:var(--surface);border-radius:24px;padding:clamp(20px,6vw,28px);box-shadow:0 12px 40px rgba(16,42,67,.1)}
     h1,h2,p{margin-top:0} h1{margin-bottom:6px;font-size:clamp(24px,7vw,30px);letter-spacing:-.02em} h2{margin-bottom:6px;font-size:20px}
     .muted{color:var(--muted);margin-bottom:24px}.small{font-size:14px}
+    .app-header{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:24px}.app-header .muted{margin-bottom:0}.brand-heading{min-width:0}.language-button{flex:0 0 48px;width:48px;min-height:48px;margin:0;padding:0;background:var(--soft);color:var(--ink)}.language-button:hover{background:#d9e2ec}
     .hero{text-align:center;padding:24px 12px;background:linear-gradient(145deg,#edfdf9,#f7fafc);border:1px solid #ccfbf1;border-radius:18px;margin-bottom:16px}
     .eyebrow{color:var(--muted);font-size:14px;font-weight:650}
     .amount{font-size:clamp(36px,12vw,48px);font-weight:780;line-height:1.1;margin:8px 0;letter-spacing:-.04em;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
@@ -39,32 +40,35 @@
 </head>
 <body>
   <main class="card">
-    <header><h1>До зарплати</h1><p class="muted">Контролюйте витрати до наступної зарплати</p></header>
+    <header class="app-header">
+      <div class="brand-heading"><h1 id="appTitle">До зарплати</h1><p id="appSubtitle" class="muted">Контролюйте витрати до наступної зарплати</p></div>
+      <button id="localeToggle" class="language-button" type="button" aria-label="Switch to English">EN</button>
+    </header>
 
     <section id="dashboard" hidden>
       <div id="activePlan">
         <div class="hero">
-          <div class="eyebrow">Можна витрачати щодня</div>
+          <div id="dailyLabel" class="eyebrow">Можна витрачати щодня</div>
           <div id="dailyAmount" class="amount">—</div>
           <p id="freshness" class="freshness"></p>
         </div>
         <dl class="stats">
-          <div class="stat"><dt>Зараз на балансі</dt><dd id="currentBalance">—</dd></div>
-          <div class="stat"><dt>За планом на сьогодні</dt><dd id="plannedBalance">—</dd></div>
+          <div class="stat"><dt id="currentBalanceLabel">Зараз на балансі</dt><dd id="currentBalance">—</dd></div>
+          <div class="stat"><dt id="plannedBalanceLabel">За планом на сьогодні</dt><dd id="plannedBalance">—</dd></div>
           <div id="differenceRow" class="stat"><dt id="differenceLabel">Різниця з планом</dt><dd id="difference">—</dd></div>
-          <div class="stat"><dt>До зарплати</dt><dd id="daysLeft">—</dd></div>
+          <div class="stat"><dt id="daysLeftLabel">До зарплати</dt><dd id="daysLeft">—</dd></div>
         </dl>
         <button id="showCheckIn" type="button" aria-expanded="false" aria-controls="checkInPanel">Оновити баланс</button>
         <div id="checkInPanel" class="inline-panel" hidden>
           <h2 id="checkInTitle">Оновити баланс</h2>
           <p id="previousBalance" class="muted small previous-value"></p>
           <form id="checkInForm" novalidate>
-            <label for="checkInBalance">Баланс зараз</label>
+            <label id="checkInBalanceLabel" for="checkInBalance">Баланс зараз</label>
             <input id="checkInBalance" type="text" inputmode="decimal" enterkeyhint="done" autocomplete="off" aria-describedby="previousBalance checkInBalanceError checkInPreview" placeholder="Наприклад, 8500">
             <p id="checkInBalanceError" class="field-error"></p>
             <p id="checkInPreview" class="preview" hidden></p>
             <p id="checkInFormError" class="form-error" role="alert"></p>
-            <button type="submit">Зберегти баланс</button>
+            <button id="saveCheckIn" type="submit">Зберегти баланс</button>
             <button id="cancelCheckIn" class="secondary" type="button">Скасувати</button>
           </form>
         </div>
@@ -72,7 +76,7 @@
       </div>
       <div id="payday" class="payday" hidden>
         <h2 id="paydayTitle" tabindex="-1">Настав день зарплати</h2>
-        <p class="muted small">Вкажіть новий баланс і наступну дату зарплати.</p>
+        <p id="paydayHint" class="muted small">Вкажіть новий баланс і наступну дату зарплати.</p>
         <button id="paydayNewPlan" type="button">Почати новий період</button>
       </div>
     </section>
@@ -81,10 +85,10 @@
       <h2 id="planTitle" tabindex="-1">Створити план</h2>
       <p id="planHint" class="muted small">Дані зберігаються лише на цьому пристрої.</p>
       <form id="planForm" novalidate>
-        <label for="balance">Баланс зараз</label>
+        <label id="balanceLabel" for="balance">Баланс зараз</label>
         <input id="balance" type="number" min="0" step="0.01" inputmode="decimal" enterkeyhint="next" aria-describedby="balanceError" placeholder="Наприклад, 30000">
         <p id="balanceError" class="field-error"></p>
-        <label for="salaryDate">Наступна зарплата</label>
+        <label id="salaryDateLabel" for="salaryDate">Наступна зарплата</label>
         <input id="salaryDate" type="date" aria-describedby="salaryDateError">
         <p id="salaryDateError" class="field-error"></p>
         <p id="planFormError" class="form-error" role="alert"></p>
@@ -103,12 +107,12 @@
   <dialog id="iosInstallDialog" aria-labelledby="iosInstallTitle">
     <button id="closeInstallDialog" class="dialog-close" type="button" aria-label="Закрити">&times;</button>
     <h2 id="iosInstallTitle">Додати на iPhone або iPad</h2>
-    <p class="muted small">iOS не дозволяє сайту запустити встановлення автоматично. Це можна зробити в Safari:</p>
+    <p id="iosInstallHint" class="muted small">iOS не дозволяє сайту запустити встановлення автоматично. Це можна зробити в Safari:</p>
     <ol class="install-steps">
-      <li>Відкрийте цю сторінку в Safari.</li>
-      <li>Натисніть кнопку «Поділитися».</li>
-      <li>Прокрутіть меню й виберіть «На початковий екран».</li>
-      <li>Натисніть «Додати».</li>
+      <li id="iosInstallStep1">Відкрийте цю сторінку в Safari.</li>
+      <li id="iosInstallStep2">Натисніть кнопку «Поділитися».</li>
+      <li id="iosInstallStep3">Прокрутіть меню й виберіть «На початковий екран».</li>
+      <li id="iosInstallStep4">Натисніть «Додати».</li>
     </ol>
     <button id="doneInstallDialog" type="button">Зрозуміло</button>
   </dialog>
@@ -116,6 +120,43 @@
   <script>
     const KEY="financeTrackerStateV1";
     const BACKUP_KEY="financeTrackerStateV1Backup";
+    const LOCALE_KEY="financeTrackerLocaleV1";
+    const translations={
+      uk:{
+        title:"До зарплати",subtitle:"Контролюйте витрати до наступної зарплати",switchLocale:"Switch to English",
+        dailyLabel:"Можна витрачати щодня",currentBalanceLabel:"Зараз на балансі",plannedBalanceLabel:"За планом на сьогодні",daysLeftLabel:"До зарплати",
+        updateBalance:"Оновити баланс",balanceNow:"Баланс зараз",balancePlaceholder:"Наприклад, 8500",saveBalance:"Зберегти баланс",cancel:"Скасувати",newPlan:"Почати новий план",
+        paydayTitle:"Настав день зарплати",paydayHint:"Вкажіть новий баланс і наступну дату зарплати.",newPeriod:"Почати новий період",createPlan:"Створити план",
+        privateHint:"Дані зберігаються лише на цьому пристрої.",salaryDate:"Наступна зарплата",planBalancePlaceholder:"Наприклад, 30000",retry:"Спробувати ще раз",addHome:"Додати на головний екран",
+        close:"Закрити",iosTitle:"Додати на iPhone або iPad",iosHint:"iOS не дозволяє сайту запустити встановлення автоматично. Це можна зробити в Safari:",
+        iosStep1:"Відкрийте цю сторінку в Safari.",iosStep2:"Натисніть кнопку «Поділитися».",iosStep3:"Прокрутіть меню й виберіть «На початковий екран».",iosStep4:"Натисніть «Додати».",understood:"Зрозуміло",
+        invalidHint:"Збережені дані пошкоджені. Новий план замінить їх, а оригінал залишиться в резервній копії на цьому пристрої.",
+        storageReadError:"Не вдалося прочитати локальні дані. Щоб не перезаписати їх, створення нового плану заблоковано.",storageAccessFirst:"Спочатку відновіть доступ до локальних даних.",
+        balanceInvalid:"Вкажіть коректний баланс.",salaryRequired:"Вкажіть дату зарплати.",salaryFuture:"Дата зарплати має бути пізніше за сьогодні.",saveDataError:"Не вдалося зберегти дані. Звільніть місце або дозвольте локальне сховище й спробуйте ще раз.",
+        checkInInvalid:"Вкажіть коректний баланс (до двох цифр після коми).",checkInSaveError:"Не вдалося зберегти баланс. Попередні дані не змінено.",
+        buffer:"Є запас",overPlan:"Понад план",updatedToday:"Оновлено сьогодні",updatedYesterday:"Оновлено вчора",
+        previousBalance:(amount,freshness)=>`Попередній баланс: ${amount} · ${freshness.toLowerCase()}`,
+        preview:amount=>`Після збереження: ${amount} на день`,updatedStatus:amount=>`Баланс оновлено. Можна витрачати ${amount} на день.`,
+        updatedAgo:(days,word)=>`Оновлено ${days} ${word} тому`
+      },
+      en:{
+        title:"Until payday",subtitle:"Keep spending on track until your next payday",switchLocale:"Перемкнути на українську",
+        dailyLabel:"Safe to spend each day",currentBalanceLabel:"Current balance",plannedBalanceLabel:"Planned balance today",daysLeftLabel:"Until payday",
+        updateBalance:"Update balance",balanceNow:"Current balance",balancePlaceholder:"For example, 8500",saveBalance:"Save balance",cancel:"Cancel",newPlan:"Start a new plan",
+        paydayTitle:"It’s payday",paydayHint:"Enter your new balance and next payday.",newPeriod:"Start a new period",createPlan:"Create a plan",
+        privateHint:"Data is stored only on this device.",salaryDate:"Next payday",planBalancePlaceholder:"For example, 30000",retry:"Try again",addHome:"Add to Home Screen",
+        close:"Close",iosTitle:"Add to iPhone or iPad",iosHint:"iOS does not allow websites to start installation automatically. You can do it in Safari:",
+        iosStep1:"Open this page in Safari.",iosStep2:"Tap the Share button.",iosStep3:"Scroll down and choose “Add to Home Screen”.",iosStep4:"Tap “Add”.",understood:"Got it",
+        invalidHint:"Saved data is damaged. A new plan will replace it, while the original remains in a backup on this device.",
+        storageReadError:"Local data could not be read. Creating a new plan is blocked to avoid overwriting it.",storageAccessFirst:"Restore access to local data first.",
+        balanceInvalid:"Enter a valid balance.",salaryRequired:"Enter your payday.",salaryFuture:"Payday must be later than today.",saveDataError:"Data could not be saved. Free up space or allow local storage, then try again.",
+        checkInInvalid:"Enter a valid balance (up to two decimal places).",checkInSaveError:"The balance could not be saved. Previous data was not changed.",
+        buffer:"Ahead of plan",overPlan:"Over plan",updatedToday:"Updated today",updatedYesterday:"Updated yesterday",
+        previousBalance:(amount,freshness)=>`Previous balance: ${amount} · ${freshness.toLowerCase()}`,
+        preview:amount=>`After saving: ${amount} per day`,updatedStatus:amount=>`Balance updated. You can spend ${amount} per day.`,
+        updatedAgo:(days,word)=>`Updated ${days} ${word} ago`
+      }
+    };
     const $=id=>document.getElementById(id);
     const el={
       dashboard:$("dashboard"),activePlan:$("activePlan"),payday:$("payday"),
@@ -128,9 +169,25 @@
       dailyAmount:$("dailyAmount"),freshness:$("freshness"),
       currentBalance:$("currentBalance"),plannedBalance:$("plannedBalance"),differenceRow:$("differenceRow"),
       differenceLabel:$("differenceLabel"),difference:$("difference"),daysLeft:$("daysLeft"),
-      installArea:$("installArea"),installApp:$("installApp"),iosInstallDialog:$("iosInstallDialog")
+      installArea:$("installArea"),installApp:$("installApp"),iosInstallDialog:$("iosInstallDialog"),localeToggle:$("localeToggle")
     };
-    let loadedState=null,rawStoredState=null,stateProblem=null,deferredInstallPrompt=null;
+    let loadedState=null,rawStoredState=null,stateProblem=null,deferredInstallPrompt=null,currentLocale="uk",planView={newPeriod:false,invalid:false};
+
+    try{const savedLocale=localStorage.getItem(LOCALE_KEY);if(savedLocale==="en"||savedLocale==="uk")currentLocale=savedLocale}catch(error){}
+    function t(key,...values){const value=translations[currentLocale][key];return typeof value==="function"?value(...values):value}
+    function setText(id,key){$(id).textContent=t(key)}
+    function applyStaticTranslations(){
+      document.documentElement.lang=currentLocale;document.title=t("title");
+      setText("appTitle","title");setText("appSubtitle","subtitle");setText("dailyLabel","dailyLabel");
+      setText("currentBalanceLabel","currentBalanceLabel");setText("plannedBalanceLabel","plannedBalanceLabel");setText("daysLeftLabel","daysLeftLabel");
+      setText("showCheckIn","updateBalance");setText("checkInTitle","updateBalance");setText("checkInBalanceLabel","balanceNow");
+      el.checkInBalance.placeholder=t("balancePlaceholder");setText("saveCheckIn","saveBalance");setText("cancelCheckIn","cancel");setText("showNewPlan","newPlan");
+      setText("paydayTitle","paydayTitle");setText("paydayHint","paydayHint");setText("paydayNewPlan","newPeriod");setText("balanceLabel","balanceNow");
+      setText("salaryDateLabel","salaryDate");el.balance.placeholder=t("planBalancePlaceholder");setText("retryStorage","retry");setText("cancelPlan","cancel");
+      setText("installApp","addHome");$("closeInstallDialog").setAttribute("aria-label",t("close"));setText("iosInstallTitle","iosTitle");setText("iosInstallHint","iosHint");
+      setText("iosInstallStep1","iosStep1");setText("iosInstallStep2","iosStep2");setText("iosInstallStep3","iosStep3");setText("iosInstallStep4","iosStep4");setText("doneInstallDialog","understood");
+      el.localeToggle.textContent=currentLocale==="uk"?"EN":"UA";el.localeToggle.setAttribute("aria-label",t("switchLocale"));
+    }
 
     const isIOS=/iPad|iPhone|iPod/.test(navigator.userAgent)||(navigator.platform==="MacIntel"&&navigator.maxTouchPoints>1);
     const isStandalone=window.matchMedia("(display-mode: standalone)").matches||navigator.standalone===true;
@@ -191,9 +248,10 @@
       }catch(error){return false}
     }
     function money(value){
-      return new Intl.NumberFormat("uk-UA",{minimumFractionDigits:Number.isInteger(value)?0:2,maximumFractionDigits:2}).format(Math.max(0,value))+" ₴";
+      return new Intl.NumberFormat(currentLocale==="uk"?"uk-UA":"en",{minimumFractionDigits:Number.isInteger(value)?0:2,maximumFractionDigits:2}).format(Math.max(0,value))+" ₴";
     }
     function dayWord(value){
+      if(currentLocale==="en")return value===1?"day":"days";
       const mod100=value%100,mod10=value%10;
       if(mod100>=11&&mod100<=14)return"днів";
       if(mod10===1)return"день";
@@ -202,9 +260,9 @@
     }
     function freshnessText(date,today){
       const ago=daysBetween(date,today);
-      if(ago===0)return"Оновлено сьогодні";
-      if(ago===1)return"Оновлено вчора";
-      return `Оновлено ${ago} ${dayWord(ago)} тому`;
+      if(ago===0)return t("updatedToday");
+      if(ago===1)return t("updatedYesterday");
+      return t("updatedAgo",ago,dayWord(ago));
     }
     function clearErrors(formName){
       if(formName==="plan"){
@@ -220,20 +278,33 @@
     function closeCheckIn(){
       el.checkInPanel.hidden=true;el.showCheckIn.hidden=false;el.showCheckIn.setAttribute("aria-expanded","false");clearErrors("checkIn");
     }
-    function showPlanPanel({newPeriod=false,invalid=false}={}){
+    function updateCheckInPreview(){
+      const currentBalance=parseMoneyInput(el.checkInBalance.value),remainingDays=daysBetween(localDateString(),loadedState.salaryDate);
+      el.checkInBalanceError.textContent="";el.checkInBalance.removeAttribute("aria-invalid");
+      if(currentBalance===null||remainingDays===0){el.checkInPreview.hidden=true;el.checkInPreview.textContent="";return}
+      el.checkInPreview.textContent=t("preview",money(currentBalance/remainingDays));el.checkInPreview.hidden=false;
+    }
+    function openCheckIn({value="",focus=true}={}){
+      clearErrors("checkIn");
+      const actual=loadedState.currentBalance??loadedState.balance,updated=loadedState.currentBalanceDate??loadedState.startDate;
+      el.previousBalance.textContent=t("previousBalance",money(actual),freshnessText(updated,localDateString()));
+      el.checkInBalance.value=value;el.checkInPanel.hidden=false;el.showCheckIn.hidden=true;el.showCheckIn.setAttribute("aria-expanded","true");
+      if(value)updateCheckInPreview();if(focus)el.checkInBalance.focus();
+    }
+    function showPlanPanel({newPeriod=false,invalid=false,focus=true}={}){
+      planView={newPeriod,invalid};
       showOnly("plan");clearErrors("plan");
       const tomorrow=new Date();tomorrow.setDate(tomorrow.getDate()+1);el.salaryDate.min=localDateString(tomorrow);
-      el.planTitle.textContent=newPeriod?"Почати новий план":"Створити план";
-      el.savePlan.textContent=newPeriod?"Почати новий план":"Створити план";
-      el.savePlan.disabled=false;el.retryStorage.hidden=true;
+      el.planTitle.textContent=newPeriod?t("newPlan"):t("createPlan");
+      el.savePlan.textContent=newPeriod?t("newPlan"):t("createPlan");
       el.cancelPlan.hidden=!loadedState;
-      el.planHint.textContent=invalid
-        ?"Збережені дані пошкоджені. Новий план замінить їх, а оригінал залишиться в резервній копії на цьому пристрої."
-        :"Дані зберігаються лише на цьому пристрої.";
+      const storageBlocked=stateProblem==="storage";
+      el.savePlan.disabled=storageBlocked;el.retryStorage.hidden=!storageBlocked;
+      el.planHint.textContent=storageBlocked?t("storageReadError"):(invalid?t("invalidHint"):t("privateHint"));
       if(newPeriod&&loadedState){
         el.balance.value=String(loadedState.currentBalance??loadedState.balance);el.salaryDate.value=defaultSalaryDate();
       }else if(!el.salaryDate.value||el.salaryDate.value<=localDateString())el.salaryDate.value=defaultSalaryDate();
-      el.planTitle.focus();
+      if(focus)el.planTitle.focus();
     }
     function renderDashboard(focus=false){
       if(!loadedState)return;
@@ -251,55 +322,40 @@
       el.daysLeft.textContent=`${remainingDays} ${dayWord(remainingDays)}`;
       el.freshness.textContent=freshnessText(updateDate,today);
       const hasBuffer=delta>=0;
-      el.differenceLabel.textContent=hasBuffer?"Є запас":"Понад план";
+      el.differenceLabel.textContent=hasBuffer?t("buffer"):t("overPlan");
       el.difference.textContent=money(Math.abs(delta));el.difference.className=hasBuffer?"positive":"negative";
       if(focus){el.dailyAmount.setAttribute("tabindex","-1");el.dailyAmount.focus()}
     }
     function initialize(focusOnSuccess=false){
       const result=readState();loadedState=result.state;stateProblem=result.problem;
       if(loadedState)renderDashboard(focusOnSuccess);else showPlanPanel({invalid:stateProblem==="invalid"});
-      if(stateProblem==="storage"){
-        el.planHint.textContent="Не вдалося прочитати локальні дані. Щоб не перезаписати їх, створення нового плану заблоковано.";
-        el.savePlan.disabled=true;el.retryStorage.hidden=false;
-      }
     }
 
     el.planForm.addEventListener("submit",event=>{
       event.preventDefault();clearErrors("plan");
       if(stateProblem==="storage"){
-        el.planFormError.textContent="Спочатку відновіть доступ до локальних даних.";return;
+        el.planFormError.textContent=t("storageAccessFirst");return;
       }
       const rawBalance=el.balance.value.trim(),balance=Number(rawBalance),salaryDate=el.salaryDate.value,today=localDateString();
       let firstInvalid=null;
       if(!rawBalance||!Number.isFinite(balance)||balance<0){
-        el.balanceError.textContent="Вкажіть коректний баланс.";el.balance.setAttribute("aria-invalid","true");firstInvalid=el.balance;
+        el.balanceError.textContent=t("balanceInvalid");el.balance.setAttribute("aria-invalid","true");firstInvalid=el.balance;
       }
       if(dateOrdinal(salaryDate)===null){
-        el.salaryDateError.textContent="Вкажіть дату зарплати.";el.salaryDate.setAttribute("aria-invalid","true");firstInvalid||=el.salaryDate;
+        el.salaryDateError.textContent=t("salaryRequired");el.salaryDate.setAttribute("aria-invalid","true");firstInvalid||=el.salaryDate;
       }else if(dateOrdinal(salaryDate)<=dateOrdinal(today)){
-        el.salaryDateError.textContent="Дата зарплати має бути пізніше за сьогодні.";el.salaryDate.setAttribute("aria-invalid","true");firstInvalid||=el.salaryDate;
+        el.salaryDateError.textContent=t("salaryFuture");el.salaryDate.setAttribute("aria-invalid","true");firstInvalid||=el.salaryDate;
       }
       if(firstInvalid){firstInvalid.focus();return}
       const schemaVersion=loadedState&&"schemaVersion" in loadedState?loadedState.schemaVersion:2;
       const nextState={...(loadedState||{}),balance,salaryDate,startDate:today,currentBalance:balance,currentBalanceDate:today,schemaVersion};
       if(!persistState(nextState,stateProblem==="invalid")){
-        el.planFormError.textContent="Не вдалося зберегти дані. Звільніть місце або дозвольте локальне сховище й спробуйте ще раз.";return;
+        el.planFormError.textContent=t("saveDataError");return;
       }
       renderDashboard(true);
     });
-    el.showCheckIn.addEventListener("click",()=>{
-      clearErrors("checkIn");
-      const actual=loadedState.currentBalance??loadedState.balance,updated=loadedState.currentBalanceDate??loadedState.startDate;
-      el.previousBalance.textContent=`Попередній баланс: ${money(actual)} · ${freshnessText(updated,localDateString()).toLowerCase()}`;
-      el.checkInBalance.value="";el.checkInPanel.hidden=false;el.showCheckIn.hidden=true;el.showCheckIn.setAttribute("aria-expanded","true");el.checkInBalance.focus();
-    });
-    el.checkInBalance.addEventListener("input",()=>{
-      const currentBalance=parseMoneyInput(el.checkInBalance.value),remainingDays=daysBetween(localDateString(),loadedState.salaryDate);
-      el.checkInBalanceError.textContent="";el.checkInBalance.removeAttribute("aria-invalid");
-      if(currentBalance===null||remainingDays===0){el.checkInPreview.hidden=true;el.checkInPreview.textContent="";return}
-      el.checkInPreview.textContent=`Після збереження: ${money(currentBalance/remainingDays)} на день`;
-      el.checkInPreview.hidden=false;
-    });
+    el.showCheckIn.addEventListener("click",()=>openCheckIn());
+    el.checkInBalance.addEventListener("input",updateCheckInPreview);
     el.checkInBalance.addEventListener("keydown",event=>{
       if(event.key==="Enter"){event.preventDefault();el.checkInForm.requestSubmit()}
     });
@@ -307,14 +363,14 @@
       event.preventDefault();clearErrors("checkIn");
       const currentBalance=parseMoneyInput(el.checkInBalance.value);
       if(currentBalance===null){
-        el.checkInBalanceError.textContent="Вкажіть коректний баланс (до двох цифр після коми).";el.checkInBalance.setAttribute("aria-invalid","true");el.checkInBalance.focus();return;
+        el.checkInBalanceError.textContent=t("checkInInvalid");el.checkInBalance.setAttribute("aria-invalid","true");el.checkInBalance.focus();return;
       }
       const today=localDateString(),remainingDays=daysBetween(today,loadedState.salaryDate);
       if(remainingDays===0){renderDashboard(true);return}
       const schemaVersion="schemaVersion" in loadedState?loadedState.schemaVersion:2;
       const nextState={...loadedState,currentBalance,currentBalanceDate:today,schemaVersion};
-      if(!persistState(nextState)){el.checkInFormError.textContent="Не вдалося зберегти баланс. Попередні дані не змінено.";return}
-      el.statusMessage.textContent=`Баланс оновлено. Можна витрачати ${money(currentBalance/remainingDays)} на день.`;
+      if(!persistState(nextState)){el.checkInFormError.textContent=t("checkInSaveError");return}
+      el.statusMessage.textContent=t("updatedStatus",money(currentBalance/remainingDays));
       renderDashboard(true);
     });
     $("cancelCheckIn").addEventListener("click",()=>{closeCheckIn();el.showCheckIn.focus()});
@@ -322,6 +378,15 @@
     $("paydayNewPlan").addEventListener("click",()=>showPlanPanel({newPeriod:true}));
     el.retryStorage.addEventListener("click",()=>initialize(true));
     el.cancelPlan.addEventListener("click",()=>renderDashboard(true));
+    el.localeToggle.addEventListener("click",()=>{
+      const checkInValue=!el.checkInPanel.hidden?el.checkInBalance.value:null;
+      currentLocale=currentLocale==="uk"?"en":"uk";
+      try{localStorage.setItem(LOCALE_KEY,currentLocale)}catch(error){}
+      applyStaticTranslations();
+      if(!el.dashboard.hidden&&loadedState){renderDashboard(false);if(checkInValue!==null)openCheckIn({value:checkInValue,focus:false})}
+      else showPlanPanel({...planView,focus:false});
+      el.localeToggle.focus();
+    });
     window.addEventListener("beforeinstallprompt",event=>{
       event.preventDefault();deferredInstallPrompt=event;updateInstallButton();
     });
@@ -340,6 +405,7 @@
     el.iosInstallDialog.addEventListener("click",event=>{
       if(event.target===el.iosInstallDialog)el.iosInstallDialog.close();
     });
+    applyStaticTranslations();
     updateInstallButton();
     initialize();
   </script>

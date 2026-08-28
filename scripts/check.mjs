@@ -18,7 +18,7 @@ function requireMatch(pattern, message) {
   if (!pattern.test(html)) failures.push(message);
 }
 
-requireMatch(/<html\s+lang="uk">/, "index.html must declare Ukrainian content");
+requireMatch(/<html\s+lang="uk">/, "index.html must keep Ukrainian as the no-script default locale");
 requireMatch(/viewport-fit=cover/, "mobile viewport must preserve safe-area support");
 requireMatch(/const KEY="financeTrackerStateV1"/, "primary storage key changed");
 requireMatch(/Date\.UTC\(/, "calendar calculations must remain DST-safe");

@@ -9,7 +9,7 @@ work. The code remains authoritative when these notes disagree with it.
 - `index.html` contains the markup, styles, and application script.
 - `manifest.webmanifest` and `icons/` provide the installable home-screen app metadata.
 - User data stays in browser `localStorage`; the app makes no network calls.
-- The interface language is Ukrainian and the primary viewport is mobile.
+- The interface supports Ukrainian and English, defaults to Ukrainian, and the primary viewport is mobile.
 
 ## User flow
 
@@ -28,6 +28,9 @@ daily allowance, and does not mutate state until the form is submitted.
 ## Local state contract
 
 Primary key: `financeTrackerStateV1`.
+
+The independent `financeTrackerLocaleV1` preference stores `uk` or `en` and
+must never cause the primary financial state to be rewritten.
 
 Legacy fields are durable:
 

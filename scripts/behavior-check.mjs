@@ -9,10 +9,12 @@ function localDate(offset = 0) {
   return `${year}-${month}-${day}`;
 }
 
-function createAppHarness(source, initialState, { failWrites = false } = {}) {
+function createAppHarness(source, initialState, { failReads = false, failWrites = false, locale } = {}) {
   const values = new Map();
   if (initialState !== undefined) values.set("financeTrackerStateV1", JSON.stringify(initialState));
+  if (locale !== undefined) values.set("financeTrackerLocaleV1", locale);
   let writes = 0;
+  const writesByKey = new Map();
   const elements = new Map();
   let document;
   function element(id) {
@@ -34,19 +36,27 @@ function createAppHarness(source, initialState, { failWrites = false } = {}) {
     elements.set(id, value);
     return value;
   }
-  document = { activeElement: null, getElementById: element };
+  document = { activeElement: null, title: "", documentElement: { lang: "uk" }, getElementById: element };
   const localStorage = {
-    getItem(key) { return values.get(key) ?? null; },
+    getItem(key) {
+      if (failReads) throw new Error("storage unavailable");
+      return values.get(key) ?? null;
+    },
     setItem(key, value) {
       if (failWrites) throw new Error("storage unavailable");
       writes += 1;
+      writesByKey.set(key, (writesByKey.get(key) ?? 0) + 1);
       values.set(key, String(value));
     }
   };
   const window = { matchMedia: () => ({ matches: false }), addEventListener() {} };
   const context = vm.createContext({ document, localStorage, window, navigator: { userAgent: "", platform: "", maxTouchPoints: 0 }, Intl, Date });
   vm.runInContext(source, context);
-  return { context, element, localStorage, get writes() { return writes; } };
+  return {
+    context, element, localStorage,
+    get writes() { return writes; },
+    writesFor(key) { return writesByKey.get(key) ?? 0; }
+  };
 }
 
 export function checkBehavior(source) {
@@ -62,6 +72,42 @@ export function checkBehavior(source) {
     futureField: { preserved: true }
   };
   const app = createAppHarness(source, activeState);
+  requireBehavior(app.context.document.documentElement.lang === "uk", "Ukrainian must remain the default locale");
+  requireBehavior(app.element("localeToggle").textContent === "EN", "default locale switch must offer English");
+
+  const englishApp = createAppHarness(source, activeState, { locale: "en" });
+  requireBehavior(englishApp.context.document.documentElement.lang === "en", "saved English preference must update the document language");
+  requireBehavior(englishApp.context.document.title === "Until payday", "English locale must translate the document title");
+  requireBehavior(englishApp.element("localeToggle").textContent === "UA", "English locale switch must offer Ukrainian");
+  requireBehavior(englishApp.element("freshness").textContent.includes("today"), "English locale must translate dynamic freshness text");
+  requireBehavior(englishApp.element("daysLeft").textContent.includes("days"), "English locale must translate dynamic day counts");
+
+  const localeApp = createAppHarness(source, activeState);
+  const financialStateBeforeLocaleChange = localeApp.localStorage.getItem("financeTrackerStateV1");
+  localeApp.element("localeToggle").dispatch("click");
+  requireBehavior(localeApp.localStorage.getItem("financeTrackerLocaleV1") === "en", "locale switch must persist English preference");
+  requireBehavior(localeApp.writesFor("financeTrackerLocaleV1") === 1, "locale switch must write its preference exactly once");
+  requireBehavior(localeApp.localStorage.getItem("financeTrackerStateV1") === financialStateBeforeLocaleChange, "locale switch must not rewrite financial state");
+  requireBehavior(localeApp.element("currentBalance").textContent.includes("9,000"), "English locale must re-render localized money");
+
+  const openCheckInApp = createAppHarness(source, activeState);
+  openCheckInApp.element("showCheckIn").dispatch("click");
+  openCheckInApp.element("checkInBalance").value = "8500";
+  openCheckInApp.element("checkInBalance").dispatch("input");
+  openCheckInApp.element("localeToggle").dispatch("click");
+  requireBehavior(!openCheckInApp.element("checkInPanel").hidden, "locale switch must keep an open balance check-in visible");
+  requireBehavior(openCheckInApp.element("checkInBalance").value === "8500", "locale switch must preserve an in-progress balance entry");
+  requireBehavior(openCheckInApp.element("checkInPreview").textContent.includes("per day"), "locale switch must translate an in-progress balance preview");
+
+  const unknownLocaleApp = createAppHarness(source, activeState, { locale: "fr" });
+  requireBehavior(unknownLocaleApp.context.document.documentElement.lang === "uk", "unknown locale preference must safely fall back to Ukrainian");
+  requireBehavior(unknownLocaleApp.writes === 0, "unknown locale fallback must not eagerly rewrite storage");
+
+  const unreadableApp = createAppHarness(source, undefined, { failReads: true });
+  requireBehavior(unreadableApp.element("savePlan").disabled, "unreadable storage must block plan creation");
+  unreadableApp.element("localeToggle").dispatch("click");
+  requireBehavior(unreadableApp.element("savePlan").disabled, "locale switch must keep plan creation blocked when storage is unreadable");
+  requireBehavior(!unreadableApp.element("retryStorage").hidden, "locale switch must keep storage recovery available");
   const parseMoney = (value) => vm.runInContext(`parseMoneyInput(${JSON.stringify(value)})`, app.context);
   for (const [input, expected] of [["8 500,25", 8500.25], ["8\u00a0500.25 ₴", 8500.25], ["₴ 8500", 8500]]) {
     requireBehavior(parseMoney(input) === expected, `money input should accept ${JSON.stringify(input)}`);
@@ -106,6 +152,11 @@ export function checkBehavior(source) {
   failedApp.element("checkInForm").dispatch("submit");
   requireBehavior(JSON.parse(failedApp.localStorage.getItem("financeTrackerStateV1")).currentBalance === 9000, "failed storage write must preserve the prior balance");
   requireBehavior(Boolean(failedApp.element("checkInFormError").textContent), "failed storage write must show an error");
+
+  const invalidEnglishApp = createAppHarness(source, activeState, { locale: "en" });
+  invalidEnglishApp.element("checkInBalance").value = "invalid";
+  invalidEnglishApp.element("checkInForm").dispatch("submit");
+  requireBehavior(invalidEnglishApp.element("checkInBalanceError").textContent.includes("valid balance"), "English locale must translate validation errors");
 
   const paydayState = { ...activeState, startDate: localDate(-10), salaryDate: localDate() };
   const paydayApp = createAppHarness(source, paydayState);
