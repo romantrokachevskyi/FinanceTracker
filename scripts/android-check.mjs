@@ -125,6 +125,27 @@ async function checkArtwork(failures) {
   }
 }
 
+async function checkSigning(failures) {
+  const gradle = await readIfPresent("android/app/build.gradle");
+  if (gradle === null) return;
+  if (!gradle.includes("keystore.properties")) {
+    failures.push("release signing must read android/keystore.properties");
+  }
+  if (!gradle.includes("signingConfigs")) {
+    failures.push("release signingConfig is missing");
+  }
+  const example = await readIfPresent("android/keystore.properties.example");
+  if (example === null) {
+    failures.push("android/keystore.properties.example is missing");
+  } else if (example.split("\n").some((line) => !line.startsWith("#") && /=\s*\S/.test(line))) {
+    failures.push("keystore.properties.example must not contain real values");
+  }
+  const ignore = await readIfPresent(".gitignore");
+  if (ignore !== null && !ignore.includes("android/keystore.properties")) {
+    failures.push("android/keystore.properties must be gitignored");
+  }
+}
+
 export async function checkAndroid() {
   const failures = [];
   await checkStaging(failures);
@@ -132,5 +153,6 @@ export async function checkAndroid() {
   await checkIdentity(failures);
   await checkPrivacy(failures);
   await checkArtwork(failures);
+  await checkSigning(failures);
   return failures;
 }

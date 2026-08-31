@@ -9,7 +9,8 @@
     "serve": "node scripts/serve.mjs",
     "build:web": "node scripts/build-web.mjs",
     "sync:android": "npm run build:web && npx cap sync android",
-    "assets:android": "npx @capacitor/assets generate --android --iconBackgroundColor \"#102a43\" --iconBackgroundColorDark \"#102a43\" --splashBackgroundColor \"#eaf2f6\" --splashBackgroundColorDark \"#102a43\""
+    "assets:android": "npx @capacitor/assets generate --android --iconBackgroundColor \"#102a43\" --iconBackgroundColorDark \"#102a43\" --splashBackgroundColor \"#eaf2f6\" --splashBackgroundColorDark \"#102a43\"",
+    "build:android": "npm run sync:android && cd android && gradlew.bat bundleRelease"
   },
   "devDependencies": {
     "@capacitor/android": "8.5.0",
