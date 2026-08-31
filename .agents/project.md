@@ -55,6 +55,17 @@ Compatibility rules:
   `financeTrackerStateV1Backup...` key before replacement.
 - If storage cannot be read, block writes; unread data may still exist.
 
+## Localization contract
+
+- `translations` in `index.html` holds one entry per locale; values are plain
+  strings or interpolating functions.
+- `applyStaticTranslations` re-applies every static string by element id, so new
+  copy needs a `uk` entry, an `en` entry, and a wiring line.
+- Switching locale re-renders dynamic text and localized money, must not write
+  the financial state, and must keep an open check-in visible with its
+  in-progress value and preview.
+- An unrecognized stored locale falls back to Ukrainian without writing storage.
+
 ## Calculation model
 
 - Calendar dates use strict `YYYY-MM-DD` validation.

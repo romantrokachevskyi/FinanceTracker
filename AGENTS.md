@@ -45,6 +45,8 @@ answers one question: how much can the user safely spend each day until payday?
 ## Verification
 
 - Run `node scripts/check.mjs` after every code or harness change.
+- Read `.agents/checks.md` before editing `scripts/`, adding coverage, or using
+  a DOM API the app does not already use.
 - For UI changes, serve the repository locally and test at 320 px and a common
   375–390 px mobile width.
 - Exercise initial setup, validation, balance check-in, reload persistence,
