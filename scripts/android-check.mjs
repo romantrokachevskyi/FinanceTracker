@@ -210,6 +210,30 @@ async function checkListing(failures) {
   }
 }
 
+const STORE_IMAGES = [
+  ["docs/store/assets/01-setup.png", 1080, 1920],
+  ["docs/store/assets/02-dashboard.png", 1080, 1920],
+  ["docs/store/assets/03-checkin.png", 1080, 1920],
+  ["docs/store/assets/04-english.png", 1080, 1920],
+  ["docs/store/assets/feature-graphic.png", 1024, 500]
+];
+
+async function checkStoreImages(failures) {
+  for (const [path, width, height] of STORE_IMAGES) {
+    let bytes;
+    try {
+      bytes = await readFile(new URL(path, ROOT));
+    } catch {
+      failures.push(`${path} is missing`);
+      continue;
+    }
+    const actual = `${bytes.readUInt32BE(16)}x${bytes.readUInt32BE(20)}`;
+    if (actual !== `${width}x${height}`) {
+      failures.push(`${path} is ${actual}, the Console expects ${width}x${height}`);
+    }
+  }
+}
+
 export async function checkAndroid() {
   const failures = [];
   await checkStaging(failures);
@@ -221,5 +245,6 @@ export async function checkAndroid() {
   await checkServer(failures);
   await checkPolicy(failures);
   await checkListing(failures);
+  await checkStoreImages(failures);
   return failures;
 }

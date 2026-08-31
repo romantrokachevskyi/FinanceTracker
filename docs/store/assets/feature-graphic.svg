@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 500" width="1024" height="500">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#102a43"/>
+      <stop offset="1" stop-color="#0b1f33"/>
+    </linearGradient>
+  </defs>
+  <rect width="1024" height="500" fill="url(#bg)"/>
+  <circle cx="905" cy="70" r="180" fill="#0f766e" opacity=".12"/>
+  <circle cx="80" cy="450" r="140" fill="#0f766e" opacity=".10"/>
+
+  <g transform="translate(76 134) scale(0.45)">
+    <rect width="512" height="512" rx="112" fill="#0f2438"/>
+    <circle cx="256" cy="256" r="170" fill="#0f766e"/>
+    <path d="M148 189c0-23 18-41 41-41h134c23 0 41 18 41 41v134c0 23-18 41-41 41H189c-23 0-41-18-41-41V189Z" fill="#fff"/>
+    <path d="M188 215h136M188 256h86M188 297h106" fill="none" stroke="#0f766e" stroke-linecap="round" stroke-width="22"/>
+    <circle cx="325" cy="299" r="31" fill="#102a43"/>
+    <path d="M325 280v38m-13-24h18c8 0 12 5 12 11s-5 12-14 12h-16" fill="none" stroke="#fff" stroke-linecap="round" stroke-width="8"/>
+  </g>
+
+  <text x="342" y="212" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif" font-size="76" font-weight="700" fill="#ffffff" letter-spacing="-1.5">До зарплати</text>
+  <text x="344" y="272" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif" font-size="34" font-weight="500" fill="#5eead4">Скільки можна витрачати щодня</text>
+
+  <g font-family="system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif" font-size="26" fill="#a8bccf">
+    <text x="344" y="342">Офлайн</text>
+    <text x="344" y="384">Без реєстрації</text>
+    <text x="560" y="342">Дані лише на пристрої</text>
+    <text x="560" y="384">Українською та English</text>
+  </g>
+  <g fill="#5eead4">
+    <circle cx="330" cy="334" r="5"/>
+    <circle cx="330" cy="376" r="5"/>
+    <circle cx="546" cy="334" r="5"/>
+    <circle cx="546" cy="376" r="5"/>
+  </g>
+</svg>
