@@ -90,10 +90,28 @@ async function checkIdentity(failures) {
   }
 }
 
+async function checkPrivacy(failures) {
+  const manifest = await readIfPresent("android/app/src/main/AndroidManifest.xml");
+  if (manifest === null) {
+    failures.push("AndroidManifest.xml is missing");
+    return;
+  }
+  if (!manifest.includes('android:allowBackup="false"')) {
+    failures.push("allowBackup must be false to keep financial data on device");
+  }
+  if (!manifest.includes("android:dataExtractionRules")) {
+    failures.push("dataExtractionRules must be declared");
+  }
+  if (!manifest.includes('android.permission.INTERNET" tools:node="remove"')) {
+    failures.push("INTERNET permission must stay removed so the offline promise is OS-enforced");
+  }
+}
+
 export async function checkAndroid() {
   const failures = [];
   await checkStaging(failures);
   await checkGitignore(failures);
   await checkIdentity(failures);
+  await checkPrivacy(failures);
   return failures;
 }
