@@ -74,5 +74,37 @@ requirement does not apply and the bundle goes straight to production.
 
 ## Verified
 
-Filled in by `docs/superpowers/plans/2026-08-31-android-play-distribution.md`
-Task 7. Do not mark anything here as passing that was not actually run.
+Run on 2026-08-31 against a Pixel 9a emulator, **Android 16 (API 36)**, debug
+build, JDK 17 Temurin.
+
+Passed:
+
+- Debug build succeeds on JDK 17. Capacitor 8.5.0 defaults already gave
+  `compileSdk`/`targetSdk` 36, so no override was needed.
+- Merged manifest requests **zero device permissions**. `INTERNET` is gone; the
+  only entry left is AndroidX's self-scoped
+  `DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION`, which grants nothing outside the
+  app. `allowBackup="false"` and both extraction rules survive manifest merging.
+- A plan created in the app survives **force-stop and relaunch**. This is the
+  `androidScheme: https` origin contract working.
+- The plan also survives an **in-place update** from `versionCode` 1 to 2.
+- Airplane mode changes nothing, as expected for an app with no network
+  permission.
+- Edge-to-edge is correct on Android 16: neither the status bar nor the
+  navigation bar overlaps content.
+- The on-screen keyboard pushes the layout without hiding the submit button.
+
+Not a defect, observed while testing: on a tall phone the card sits vertically
+centred with a large gap above it, and below 480 px the page background matches
+the card. Both come from existing media queries in `index.html` and render
+identically in a desktop browser at the same viewport. Packaging did not change
+them.
+
+Still manual, not yet run:
+
+- Any test on physical hardware. Everything above is emulator-only.
+- A signed **release** build and `jarsigner` verification. That needs the upload
+  keystore, which only you can create.
+- The 320 px width pass and the reduced-motion, contrast, and screen-reader
+  checks that `.agents/workflow.md` requires for UI changes. No UI was changed,
+  so these were not re-run.

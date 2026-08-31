@@ -179,6 +179,37 @@ async function checkPolicy(failures) {
   }
 }
 
+const LISTINGS = [
+  ["docs/store/listing-uk.md", APP_NAME_UK],
+  ["docs/store/listing-en.md", "Until Payday"]
+];
+
+async function checkListing(failures) {
+  for (const [path, name] of LISTINGS) {
+    const text = await readIfPresent(path);
+    if (text === null) {
+      failures.push(`${path} is missing`);
+      continue;
+    }
+    if (!text.includes(name)) failures.push(`${path} must use the app name ${name}`);
+    const short = text.match(/## Short description\n\n(.+)/);
+    if (!short) {
+      failures.push(`${path} must contain a short description`);
+    } else if (short[1].trim().length > 80) {
+      failures.push(`${path} short description is ${short[1].trim().length} chars, over Play's 80 limit`);
+    }
+    const full = text.match(/## Full description\n\n([\s\S]+?)\n## /);
+    if (!full) {
+      failures.push(`${path} must contain a full description`);
+    } else if (full[1].trim().length > 4000) {
+      failures.push(`${path} full description is ${full[1].trim().length} chars, over Play's 4000 limit`);
+    }
+  }
+  if ((await readIfPresent("docs/store/data-safety.md")) === null) {
+    failures.push("docs/store/data-safety.md is missing");
+  }
+}
+
 export async function checkAndroid() {
   const failures = [];
   await checkStaging(failures);
@@ -189,5 +220,6 @@ export async function checkAndroid() {
   await checkSigning(failures);
   await checkServer(failures);
   await checkPolicy(failures);
+  await checkListing(failures);
   return failures;
 }
