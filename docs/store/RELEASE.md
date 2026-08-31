@@ -47,6 +47,28 @@ produces an unsigned bundle, which Play will reject. Verify signing with:
 jarsigner -verify -verbose:summary android/app/build/outputs/bundle/release/app-release.aab
 ```
 
+## Regenerating store artwork
+
+The four screenshots in `assets/` are real captures from the app running on a
+device, not browser renders. To redo them, install the debug build on a device
+or emulator and capture each state:
+
+```bash
+adb exec-out screencap -p > raw/01-setup.png
+```
+
+Capture `01-setup` on a fresh install, `02-dashboard` after creating a plan,
+`03-checkin` after tapping "Оновити баланс" (dismiss the keyboard and scroll to
+the top first), and `04-english` after tapping the EN toggle. Then crop them to
+the ratio the Console accepts:
+
+```bash
+node scripts/store-shots.mjs <path-to-raw-directory>
+```
+
+Raw captures are not committed; only the cropped results are. The same command
+re-renders `feature-graphic.png` from `feature-graphic.svg`.
+
 ## Increment for every upload
 
 Raise `versionCode` by one in `android/app/build.gradle` before each upload to

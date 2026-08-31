@@ -14,7 +14,9 @@ answers one question: how much can the user safely spend each day until payday?
 2. Read `.agents/project.md` before changing behavior, storage, calculations,
    accessibility, or layout.
 3. Read `.agents/workflow.md` before implementing or reviewing a change.
-4. Inspect the relevant code; do not rely on these notes when the code can
+4. Read `.agents/android-release.md` before changing packaging, signing, app
+   identity, or store artifacts.
+5. Inspect the relevant code; do not rely on these notes when the code can
    answer a question directly.
 
 ## Non-negotiable contracts

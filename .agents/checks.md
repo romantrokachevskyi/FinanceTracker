@@ -48,5 +48,15 @@ The app is static with no build step. Serve it, then test at 320 px and a
 375–390 px width:
 
 ```sh
-python -m http.server 8000
+npm run serve
 ```
+
+`scripts/serve.mjs` also accepts `?seed=setup|dashboard|checkin|payday` to
+render a populated state without touching `index.html`.
+
+## Packaging checks
+
+`scripts/android-check.mjs` guards the Android packaging contracts — app
+identity, SDK levels, the `https://localhost` storage origin, the privacy
+posture, signing, and store artifact sizes. `scripts/check.mjs` runs it. Add new
+packaging assertions there rather than in `scripts/check.mjs`.
