@@ -163,6 +163,22 @@ async function checkServer(failures) {
   }
 }
 
+async function checkPolicy(failures) {
+  const policy = await readIfPresent("docs/privacy/index.html");
+  if (policy === null) {
+    failures.push("docs/privacy/index.html is missing");
+    return;
+  }
+  for (const marker of ['lang="uk"', "конфіденційності", "Privacy Policy"]) {
+    if (!policy.includes(marker)) {
+      failures.push(`privacy policy must include ${marker}`);
+    }
+  }
+  if ((await readIfPresent("docs/index.html")) === null) {
+    failures.push("docs/index.html is missing, GitHub Pages would serve a directory listing");
+  }
+}
+
 export async function checkAndroid() {
   const failures = [];
   await checkStaging(failures);
@@ -172,5 +188,6 @@ export async function checkAndroid() {
   await checkArtwork(failures);
   await checkSigning(failures);
   await checkServer(failures);
+  await checkPolicy(failures);
   return failures;
 }
