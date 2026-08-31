@@ -1,0 +1,11 @@
+{
+  "appId": "io.github.romantrokachevskyi.dozarplaty",
+  "appName": "До зарплати",
+  "webDir": "www",
+  "server": {
+    "androidScheme": "https"
+  },
+  "android": {
+    "backgroundColor": "#eaf2f6"
+  }
+}
