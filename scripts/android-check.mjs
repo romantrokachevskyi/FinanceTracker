@@ -107,11 +107,30 @@ async function checkPrivacy(failures) {
   }
 }
 
+async function checkArtwork(failures) {
+  const source = await readIfPresent("icons/app-icon.svg");
+  const generated = await readIfPresent("assets/icon.svg");
+  if (generated === null) {
+    failures.push("assets/icon.svg is missing");
+  } else if (source !== null && source !== generated) {
+    failures.push("assets/icon.svg must stay identical to icons/app-icon.svg");
+  }
+  try {
+    const mipmaps = await readdir(new URL("android/app/src/main/res/mipmap-anydpi-v26", ROOT));
+    if (!mipmaps.includes("ic_launcher.xml")) {
+      failures.push("adaptive launcher icon is missing");
+    }
+  } catch {
+    failures.push("adaptive launcher icon directory is missing");
+  }
+}
+
 export async function checkAndroid() {
   const failures = [];
   await checkStaging(failures);
   await checkGitignore(failures);
   await checkIdentity(failures);
   await checkPrivacy(failures);
+  await checkArtwork(failures);
   return failures;
 }
