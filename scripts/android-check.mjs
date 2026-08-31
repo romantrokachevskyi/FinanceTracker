@@ -108,11 +108,15 @@ async function checkPrivacy(failures) {
 }
 
 async function checkArtwork(failures) {
+  // Compare without line endings: the two files were committed under different
+  // eol rules, so a byte comparison fails on a fresh checkout even when the
+  // artwork is identical.
+  const normalize = (text) => text.replace(/\r\n/g, "\n").trim();
   const source = await readIfPresent("icons/app-icon.svg");
   const generated = await readIfPresent("assets/icon.svg");
   if (generated === null) {
     failures.push("assets/icon.svg is missing");
-  } else if (source !== null && source !== generated) {
+  } else if (source !== null && normalize(source) !== normalize(generated)) {
     failures.push("assets/icon.svg must stay identical to icons/app-icon.svg");
   }
   try {
