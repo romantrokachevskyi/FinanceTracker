@@ -146,6 +146,23 @@ async function checkSigning(failures) {
   }
 }
 
+async function checkServer(failures) {
+  const source = await readIfPresent("scripts/serve.mjs");
+  if (source === null) {
+    failures.push("scripts/serve.mjs is missing");
+    return;
+  }
+  for (const seed of ["setup", "dashboard", "checkin", "payday"]) {
+    if (!source.includes(`${seed}:`)) {
+      failures.push(`serve.mjs must define the ${seed} seed`);
+    }
+  }
+  const html = await readIfPresent("index.html");
+  if (html !== null && html.includes("seed")) {
+    failures.push("index.html must not contain seeding hooks");
+  }
+}
+
 export async function checkAndroid() {
   const failures = [];
   await checkStaging(failures);
@@ -154,5 +171,6 @@ export async function checkAndroid() {
   await checkPrivacy(failures);
   await checkArtwork(failures);
   await checkSigning(failures);
+  await checkServer(failures);
   return failures;
 }
