@@ -1,5 +1,6 @@
 import { readFile } from "node:fs/promises";
 import { checkBehavior } from "./behavior-check.mjs";
+import { checkAndroid } from "./android-check.mjs";
 
 const files = {
   html: new URL("../index.html", import.meta.url),
@@ -57,6 +58,8 @@ for (const [, source] of scripts) {
 }
 
 if (scripts.length === 1) failures.push(...checkBehavior(scripts[0][1]));
+
+failures.push(...await checkAndroid());
 
 if (failures.length) {
   console.error(failures.map((failure) => `- ${failure}`).join("\n"));

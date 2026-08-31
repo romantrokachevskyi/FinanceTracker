@@ -1,0 +1,18 @@
+{
+  "name": "financetracker",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Offline Ukrainian-first daily spending allowance app",
+  "type": "module",
+  "scripts": {
+    "check": "node scripts/check.mjs",
+    "serve": "node scripts/serve.mjs",
+    "build:web": "node scripts/build-web.mjs",
+    "sync:android": "npm run build:web && npx cap sync android"
+  },
+  "devDependencies": {
+    "@capacitor/android": "8.5.0",
+    "@capacitor/cli": "8.5.0",
+    "@capacitor/core": "8.5.0"
+  }
+}
