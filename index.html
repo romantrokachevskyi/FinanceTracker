@@ -422,6 +422,9 @@
       if(!persistState(nextState,stateProblem==="invalid")){
         el.planFormError.textContent=t("saveDataError");return;
       }
+      // Pin the language the plan was made in; without a stored choice the next
+      // launch would read this plan as pre-detection data and pick Ukrainian.
+      try{const savedLocale=localStorage.getItem(LOCALE_KEY);if(savedLocale!=="uk"&&savedLocale!=="en")localStorage.setItem(LOCALE_KEY,currentLocale)}catch(error){}
       renderDashboard(true);
     });
     el.showCheckIn.addEventListener("click",()=>openCheckIn());
