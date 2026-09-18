@@ -10,3 +10,4 @@ android/local.properties
 android/app/release/
 android/app/src/main/assets/public/
 .DS_Store
+docs/store/assets/raw/

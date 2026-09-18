@@ -206,9 +206,10 @@ async function checkServer(failures) {
     failures.push("scripts/serve.mjs is missing");
     return;
   }
+  const seeds = await readIfPresent("scripts/store-seeds.mjs");
   for (const seed of ["setup", "dashboard", "checkin", "payday"]) {
-    if (!source.includes(`${seed}:`)) {
-      failures.push(`serve.mjs must define the ${seed} seed`);
+    if (!seeds?.includes(`${seed}:`)) {
+      failures.push(`store-seeds.mjs must define the ${seed} seed`);
     }
   }
   const html = await readIfPresent("index.html");
@@ -264,13 +265,12 @@ async function checkListing(failures) {
   }
 }
 
-const STORE_IMAGES = [
-  ["docs/store/assets/01-setup.png", 1080, 1920],
-  ["docs/store/assets/02-dashboard.png", 1080, 1920],
-  ["docs/store/assets/03-checkin.png", 1080, 1920],
-  ["docs/store/assets/04-english.png", 1080, 1920],
-  ["docs/store/assets/feature-graphic.png", 1024, 500]
-];
+// One full set per listing language: the English default listing and the
+// Ukrainian translation each get screenshots in their own UI language.
+const STORE_IMAGES = ["en", "uk"].flatMap((language) => [
+  ...["01-setup", "02-dashboard", "03-checkin", "04-payday"].map((name) => [`docs/store/assets/${language}/${name}.png`, 1080, 1920]),
+  [`docs/store/assets/${language}/feature-graphic.png`, 1024, 500]
+]);
 
 async function checkStoreImages(failures) {
   for (const [path, width, height] of STORE_IMAGES) {

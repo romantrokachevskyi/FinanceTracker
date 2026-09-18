@@ -11,6 +11,7 @@
     "sync:android": "npm run build:web && npx cap sync android",
     "assets:android": "npx @capacitor/assets generate --android --iconBackgroundColor \"#102a43\" --iconBackgroundColorDark \"#102a43\" --splashBackgroundColor \"#eaf2f6\" --splashBackgroundColorDark \"#102a43\"",
     "build:android": "npm run sync:android && cd android && .\\gradlew.bat bundleRelease",
+    "capture:store": "node scripts/capture-store.mjs",
     "shots": "node scripts/store-shots.mjs"
   },
   "devDependencies": {

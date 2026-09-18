@@ -50,13 +50,14 @@ grep -o 'uses-permission[^/]*' app/build/intermediates/merged_manifest/debug/*/A
 
 ## Demo state
 
-Store screenshots need populated states. Seeding lives in `scripts/serve.mjs`,
-which injects a script into the HTTP response. It never goes into `index.html`;
-`scripts/check.mjs` fails if it does.
-
-Screenshots themselves are captured from the app on a device with
-`adb exec-out screencap -p`, then cropped by `scripts/store-shots.mjs`. See
-`docs/store/RELEASE.md`.
+Store screenshots need populated states, defined once in
+`scripts/store-seeds.mjs`. `scripts/serve.mjs` injects them into the HTTP
+response for browser work; `scripts/capture-store.mjs` writes them into the
+debug build's WebView over its DevTools socket and captures each state on a
+device in English and Ukrainian. Neither path touches `index.html`, and
+`scripts/check.mjs` fails if seeding code appears there.
+`scripts/store-shots.mjs` crops the raw captures and renders both feature
+graphics. Procedure: `docs/store/RELEASE.md`.
 
 ## Store artifacts
 
@@ -84,7 +85,8 @@ npm run sync:android          # stage web assets and sync into android/
 npm run build:android         # release bundle at
                               # android/app/build/outputs/bundle/release/
 npm run assets:android        # regenerate launcher icons and splashes
-npm run shots                 # rebuild store artwork from raw device captures
+npm run capture:store         # raw device captures, both languages (debug build)
+npm run shots                 # crop them and render the feature graphics
 ```
 
 ## Toolchain observed working
