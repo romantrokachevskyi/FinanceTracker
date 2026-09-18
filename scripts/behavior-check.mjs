@@ -79,6 +79,7 @@ function createAppHarness(source, initialState, { failReads = false, failWrites 
           showBanner: record("showBanner"),
           hideBanner: record("hideBanner"),
           resumeBanner: record("resumeBanner"),
+          showPrivacyOptionsForm: record("showPrivacyOptionsForm"),
           addListener: record("addListener", { remove() {} })
         }
       }
@@ -254,6 +255,23 @@ export async function checkBehavior(source) {
   const consentNames = consentApp.adCallNames();
   requireBehavior(consentNames.includes("showConsentForm"), "required consent must present the consent form");
   requireBehavior(consentNames.indexOf("showConsentForm") < consentNames.indexOf("showBanner"), "consent must be gathered before the banner appears");
+
+  // EEA and UK users must be able to reopen their consent choice at any time.
+  // UMP says when that applies; the entry point must exist whether or not the
+  // user ended up allowing ads.
+  const privacyOptionsApp = createAppHarness(source, activeState, {
+    capacitor: true,
+    ads: { visits: 20, lastVisitDate: localDate() },
+    consentInfo: { status: "REQUIRED", isConsentFormAvailable: true, canRequestAds: false },
+    consentAfterForm: { status: "REQUIRED", isConsentFormAvailable: true, canRequestAds: false, privacyOptionsRequirementStatus: "REQUIRED" }
+  });
+  privacyOptionsApp.element("adPrivacy").hidden = true;
+  await flush();
+  requireBehavior(privacyOptionsApp.element("adPrivacy").hidden === false, "required privacy options must show the ad settings button");
+  privacyOptionsApp.element("adPrivacy").dispatch("click");
+  requireBehavior(privacyOptionsApp.adCallNames().includes("showPrivacyOptionsForm"), "the ad settings button must open the privacy options form");
+  bannerApp.element("adPrivacy").dispatch("click");
+  requireBehavior(!bannerApp.adCallNames().includes("showPrivacyOptionsForm"), "the ad settings button must stay inert where privacy options are not required");
 
   const refusedConsentApp = createAppHarness(source, activeState, {
     capacitor: true,
