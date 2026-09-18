@@ -27,7 +27,9 @@ hand-written stub, not a real DOM.
   `setAttribute`/`getAttribute`/`removeAttribute`, `focus`, `requestSubmit`,
   `showModal`, `close`.
 - Available globals: `document`, `localStorage`, `window.matchMedia`,
-  `window.addEventListener`, `navigator`, `Intl`, `Date`.
+  `window.addEventListener`, `navigator`, `Intl`, `Date`. `window.Capacitor`
+  exists only when the `capacitor` option is set — its absence is what the web
+  build looks like from inside the harness.
 - An API outside that surface works in the browser but fails the check. Extend
   the stub in the same change that introduces the need.
 
@@ -37,10 +39,15 @@ hand-written stub, not a real DOM.
   every case.
 - Add a case with `createAppHarness(source, state, options)` and append a
   `requireBehavior(condition, message)` call inside `checkBehavior`.
-- `options` supports `failReads`, `failWrites`, and `locale`.
+- `options` supports `failReads`, `failWrites`, `locale`, `ads`, `capacitor`,
+  `consentInfo` and `consentAfterForm`.
 - Build fixtures with `localDate(offset)` so cases stay date-independent.
 - `app.writes` and `app.writesFor(key)` assert exact write counts. They are the
   main guard against eager or duplicated storage rewrites.
+- `checkBehavior` is `async`; `await` it, and `await flush()` before asserting
+  on `app.adCalls` or `app.adCallNames()`, which are async by nature.
+- Ad cases need a same-day `ads` seed when they assert on total `writes`, or the
+  startup visit write shifts the count. See `.agents/ads.md`.
 
 ## Manual UI pass
 

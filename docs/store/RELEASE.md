@@ -103,15 +103,11 @@ Passed:
 
 - Debug build succeeds on JDK 17. Capacitor 8.5.0 defaults already gave
   `compileSdk`/`targetSdk` 36, so no override was needed.
-- Merged manifest requests **zero device permissions**. `INTERNET` is gone; the
-  only entry left is AndroidX's self-scoped
-  `DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION`, which grants nothing outside the
-  app. `allowBackup="false"` and both extraction rules survive manifest merging.
+- `allowBackup="false"` and both extraction rules survive manifest merging.
 - A plan created in the app survives **force-stop and relaunch**. This is the
   `androidScheme: https` origin contract working.
 - The plan also survives an **in-place update** from `versionCode` 1 to 2.
-- Airplane mode changes nothing, as expected for an app with no network
-  permission.
+- Airplane mode changes nothing for the plan, the calculations or persistence.
 - Edge-to-edge is correct on Android 16: neither the status bar nor the
   navigation bar overlaps content.
 - The on-screen keyboard pushes the layout without hiding the submit button.
@@ -130,3 +126,34 @@ Still manual, not yet run:
 - The 320 px width pass and the reduced-motion, contrast, and screen-reader
   checks that `.agents/workflow.md` requires for UI changes. No UI was changed,
   so these were not re-run.
+
+## Verified — ad banner, 2026-09-18
+
+Debug build on JDK 17 Temurin, `gradlew.bat assembleDebug`, BUILD SUCCESSFUL.
+`@capacitor-community/admob@8.1.0` compiles and packages.
+
+The merged manifest now carries **nine** permissions, not zero. `INTERNET` is
+the app's; the Mobile Ads SDK merges in `ACCESS_NETWORK_STATE`,
+`com.google.android.gms.permission.AD_ID`, the three `ACCESS_ADSERVICES_*`
+Privacy Sandbox permissions, `FOREGROUND_SERVICE` and `WAKE_LOCK`, alongside
+Play services' self-scoped `DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION`. None is
+a runtime permission. `docs/store/data-safety.md` justifies each.
+
+Reproduce with:
+
+```sh
+cd android && ./gradlew.bat assembleDebug
+grep -o 'uses-permission[^/]*' app/build/intermediates/merged_manifest/debug/*/AndroidManifest.xml | sort -u
+```
+
+Not yet run, and required before this ships:
+
+- The banner rendering on a device or emulator, against Google's test ad unit.
+  Nothing here proves an ad actually draws — only that the SDK links.
+- The UMP consent form appearing, which needs a GDPR message configured in the
+  AdMob console and a device in an EEA locale (or `debugGeography`).
+- The layout pass at 320 px and 375 px **with** the banner present, confirming
+  `--ad-height` keeps the submit button clear. This is a UI change, so
+  `.agents/workflow.md` requires the reduced-motion, contrast and screen-reader
+  checks too.
+- Play Console re-declaration: Ads, Data safety, and a fresh IARC rating.

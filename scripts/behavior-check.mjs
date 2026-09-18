@@ -9,10 +9,16 @@ function localDate(offset = 0) {
   return `${year}-${month}-${day}`;
 }
 
-function createAppHarness(source, initialState, { failReads = false, failWrites = false, locale } = {}) {
+const defaultConsentInfo = { status: "NOT_REQUIRED", isConsentFormAvailable: false, canRequestAds: true };
+// UMP returns updated consent once the user has answered the form, so the fake
+// must too, or the app would look like it ignores its own consent gate.
+const defaultConsentAfterForm = { status: "OBTAINED", isConsentFormAvailable: true, canRequestAds: true };
+
+function createAppHarness(source, initialState, { failReads = false, failWrites = false, locale, ads, capacitor = false, consentInfo = defaultConsentInfo, consentAfterForm = defaultConsentAfterForm } = {}) {
   const values = new Map();
   if (initialState !== undefined) values.set("financeTrackerStateV1", JSON.stringify(initialState));
   if (locale !== undefined) values.set("financeTrackerLocaleV1", locale);
+  if (ads !== undefined) values.set("financeTrackerAdsV1", typeof ads === "string" ? ads : JSON.stringify(ads));
   let writes = 0;
   const writesByKey = new Map();
   const elements = new Map();
@@ -50,18 +56,40 @@ function createAppHarness(source, initialState, { failReads = false, failWrites 
     }
   };
   const window = { matchMedia: () => ({ matches: false }), addEventListener() {} };
+  const adCalls = [];
+  if (capacitor) {
+    const record = (name, result) => (...args) => {
+      adCalls.push({ name, args });
+      return Promise.resolve(result);
+    };
+    window.Capacitor = {
+      isNativePlatform: () => true,
+      Plugins: {
+        AdMob: {
+          initialize: record("initialize"),
+          requestConsentInfo: record("requestConsentInfo", consentInfo),
+          showConsentForm: record("showConsentForm", consentAfterForm),
+          showBanner: record("showBanner"),
+          addListener: record("addListener", { remove() {} })
+        }
+      }
+    };
+  }
   const context = vm.createContext({ document, localStorage, window, navigator: { userAgent: "", platform: "", maxTouchPoints: 0 }, Intl, Date });
   vm.runInContext(source, context);
   return {
-    context, element, localStorage,
+    context, element, localStorage, adCalls,
+    adCallNames() { return adCalls.map((call) => call.name); },
     get writes() { return writes; },
     writesFor(key) { return writesByKey.get(key) ?? 0; }
   };
 }
 
-export function checkBehavior(source) {
+export async function checkBehavior(source) {
   const failures = [];
   const requireBehavior = (condition, message) => { if (!condition) failures.push(message); };
+  const flush = async () => { for (let i = 0; i < 20; i += 1) await Promise.resolve(); };
+  const storedAdState = (app) => { try { return JSON.parse(app.localStorage.getItem("financeTrackerAdsV1")); } catch (error) { return null; } };
   const activeState = {
     balance: 10000,
     startDate: localDate(-1),
@@ -71,7 +99,8 @@ export function checkBehavior(source) {
     schemaVersion: 3,
     futureField: { preserved: true }
   };
-  const app = createAppHarness(source, activeState);
+  const countedToday = { visits: 1, lastVisitDate: localDate() };
+  const app = createAppHarness(source, activeState, { ads: countedToday });
   requireBehavior(app.context.document.documentElement.lang === "uk", "Ukrainian must remain the default locale");
   requireBehavior(app.element("localeToggle").textContent === "EN", "default locale switch must offer English");
 
@@ -99,7 +128,7 @@ export function checkBehavior(source) {
   requireBehavior(openCheckInApp.element("checkInBalance").value === "8500", "locale switch must preserve an in-progress balance entry");
   requireBehavior(openCheckInApp.element("checkInPreview").textContent.includes("per day"), "locale switch must translate an in-progress balance preview");
 
-  const unknownLocaleApp = createAppHarness(source, activeState, { locale: "fr" });
+  const unknownLocaleApp = createAppHarness(source, activeState, { locale: "fr", ads: countedToday });
   requireBehavior(unknownLocaleApp.context.document.documentElement.lang === "uk", "unknown locale preference must safely fall back to Ukrainian");
   requireBehavior(unknownLocaleApp.writes === 0, "unknown locale fallback must not eagerly rewrite storage");
 
@@ -135,12 +164,13 @@ export function checkBehavior(source) {
   requireBehavior(saved.currentBalance === 8500.25, "balance submit must store the parsed amount");
   requireBehavior(saved.schemaVersion === 3 && saved.futureField.preserved, "balance submit must preserve future schema data");
 
-  const keyboardApp = createAppHarness(source, activeState);
+  const keyboardApp = createAppHarness(source, activeState, { ads: countedToday });
   keyboardApp.element("checkInBalance").value = "9000";
   keyboardApp.element("checkInBalance").dispatch("keydown", { key: "Enter" });
-  requireBehavior(keyboardApp.writes === 1, "Enter must submit the balance exactly once");
+  requireBehavior(keyboardApp.writesFor("financeTrackerStateV1") === 1, "Enter must submit the balance exactly once");
+  requireBehavior(keyboardApp.writes === 1, "Enter must not write anything besides the balance");
 
-  const cancelApp = createAppHarness(source, activeState);
+  const cancelApp = createAppHarness(source, activeState, { ads: countedToday });
   cancelApp.element("showCheckIn").dispatch("click");
   cancelApp.element("cancelCheckIn").dispatch("click");
   requireBehavior(cancelApp.writes === 0, "cancel must not write storage");
@@ -159,10 +189,83 @@ export function checkBehavior(source) {
   requireBehavior(invalidEnglishApp.element("checkInBalanceError").textContent.includes("valid balance"), "English locale must translate validation errors");
 
   const paydayState = { ...activeState, startDate: localDate(-10), salaryDate: localDate() };
-  const paydayApp = createAppHarness(source, paydayState);
+  const paydayApp = createAppHarness(source, paydayState, { ads: countedToday });
   paydayApp.element("checkInBalance").value = "8000";
   paydayApp.element("checkInForm").dispatch("submit");
   requireBehavior(paydayApp.writes === 0, "payday rollover must block balance writes");
   requireBehavior(!paydayApp.element("payday").hidden, "payday rollover must remain visible after a blocked submit");
+
+  const firstVisitApp = createAppHarness(source, activeState);
+  const firstVisit = storedAdState(firstVisitApp);
+  requireBehavior(firstVisitApp.writesFor("financeTrackerAdsV1") === 1, "a first ever open must record the visit exactly once");
+  requireBehavior(firstVisit?.visits === 1 && firstVisit?.lastVisitDate === localDate(), "a first ever open must start the visit counter at today");
+
+  const sameDayApp = createAppHarness(source, activeState, { ads: { visits: 3, lastVisitDate: localDate() } });
+  requireBehavior(sameDayApp.writesFor("financeTrackerAdsV1") === 0, "a second open on the same day must not rewrite the visit counter");
+
+  const nextDayApp = createAppHarness(source, activeState, { ads: { visits: 3, lastVisitDate: localDate(-1) } });
+  const nextDayVisit = storedAdState(nextDayApp);
+  requireBehavior(nextDayApp.writesFor("financeTrackerAdsV1") === 1, "an open on a later day must record the visit exactly once");
+  requireBehavior(nextDayVisit?.visits === 4 && nextDayVisit?.lastVisitDate === localDate(), "an open on a later day must count one more visit");
+
+  const bannerApp = createAppHarness(source, activeState, { capacitor: true, ads: { visits: 9, lastVisitDate: localDate(-1) } });
+  await flush();
+  const bannerOptions = bannerApp.adCalls.find((call) => call.name === "showBanner")?.args[0];
+  requireBehavior(Boolean(bannerOptions), "the tenth day of use must show the banner");
+  requireBehavior(bannerOptions?.position === "BOTTOM_CENTER", "the banner must stay anchored to the bottom");
+  requireBehavior(bannerOptions?.adSize === "ADAPTIVE_BANNER", "the banner must size itself adaptively");
+  requireBehavior(bannerOptions?.isTesting === true, "a Google test ad unit must request test ads");
+
+  const belowThresholdApp = createAppHarness(source, activeState, { capacitor: true, ads: { visits: 8, lastVisitDate: localDate(-1) } });
+  await flush();
+  requireBehavior(!belowThresholdApp.adCallNames().includes("showBanner"), "the ninth day of use must stay free of ads");
+
+  const consentApp = createAppHarness(source, activeState, {
+    capacitor: true,
+    ads: { visits: 20, lastVisitDate: localDate() },
+    consentInfo: { status: "REQUIRED", isConsentFormAvailable: true, canRequestAds: true }
+  });
+  await flush();
+  const consentNames = consentApp.adCallNames();
+  requireBehavior(consentNames.includes("showConsentForm"), "required consent must present the consent form");
+  requireBehavior(consentNames.indexOf("showConsentForm") < consentNames.indexOf("showBanner"), "consent must be gathered before the banner appears");
+
+  const refusedConsentApp = createAppHarness(source, activeState, {
+    capacitor: true,
+    ads: { visits: 20, lastVisitDate: localDate() },
+    consentInfo: { status: "REQUIRED", isConsentFormAvailable: false, canRequestAds: false }
+  });
+  await flush();
+  // The positive control keeps the two negatives below from passing merely
+  // because the promise chain had not got that far yet.
+  requireBehavior(refusedConsentApp.adCallNames().includes("requestConsentInfo"), "the ad flow must reach the consent decision before it gives up");
+  requireBehavior(!refusedConsentApp.adCallNames().includes("showConsentForm"), "an unavailable consent form must not be requested");
+  requireBehavior(!refusedConsentApp.adCallNames().includes("showBanner"), "ads must not be requested without consent");
+
+  // The form was shown and the user did not consent. canRequestAds is absent, as
+  // it can be on an error path, so only the status stands between us and an ad.
+  const dismissedConsentApp = createAppHarness(source, activeState, {
+    capacitor: true,
+    ads: { visits: 20, lastVisitDate: localDate() },
+    consentInfo: { status: "REQUIRED", isConsentFormAvailable: true },
+    consentAfterForm: { status: "REQUIRED", isConsentFormAvailable: true }
+  });
+  await flush();
+  requireBehavior(dismissedConsentApp.adCallNames().includes("showConsentForm"), "a dismissed consent test must actually reach the form");
+  requireBehavior(!dismissedConsentApp.adCallNames().includes("showBanner"), "a dismissed consent form must leave the banner unshown");
+
+  const malformedAdsApp = createAppHarness(source, activeState, { ads: "{not json" });
+  const repairedVisit = storedAdState(malformedAdsApp);
+  requireBehavior(Boolean(malformedAdsApp.element("dailyAmount").textContent), "a malformed visit counter must not stop the dashboard");
+  requireBehavior(repairedVisit?.visits === 1 && repairedVisit?.lastVisitDate === localDate(), "a malformed visit counter must be replaced by a fresh count");
+
+  const webApp = createAppHarness(source, activeState, { ads: { visits: 50, lastVisitDate: localDate(-1) } });
+  await flush();
+  requireBehavior(webApp.adCalls.length === 0, "the web build must never call the ad SDK");
+  requireBehavior(Boolean(webApp.element("dailyAmount").textContent), "the web build must keep rendering the dashboard");
+
+  const failedCounterApp = createAppHarness(source, activeState, { failWrites: true });
+  requireBehavior(Boolean(failedCounterApp.element("dailyAmount").textContent), "a failed visit counter write must not break the dashboard");
+
   return failures;
 }

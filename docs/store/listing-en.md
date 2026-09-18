@@ -2,7 +2,7 @@
 
 ## Short description
 
-How much you can spend each day until payday. Offline, no sign-up.
+How much you can spend each day until payday. Works offline, no sign-up.
 
 ## Full description
 
@@ -23,10 +23,11 @@ How it works:
 
 Why it works this way:
 
-• Fully offline. The app holds no internet permission, so your numbers
-  physically cannot go anywhere.
+• Your numbers stay on your device. The app never sends them anywhere, every
+  calculation runs locally, and it works with no connection at all.
 • No accounts. Nothing to register, nothing to confirm.
-• No ads, no analytics, no trackers.
+• No analytics and no trackers of our own. One small banner keeps the app
+  free, and it appears only after you have used the app on ten separate days.
 • Data is stored only on your device and is deleted when you uninstall.
 • Available in Ukrainian and English.
 • Built for phones: large controls, zoom support, and screen reader support.

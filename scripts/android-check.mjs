@@ -102,8 +102,21 @@ async function checkPrivacy(failures) {
   if (!manifest.includes("android:dataExtractionRules")) {
     failures.push("dataExtractionRules must be declared");
   }
-  if (!manifest.includes('android.permission.INTERNET" tools:node="remove"')) {
-    failures.push("INTERNET permission must stay removed so the offline promise is OS-enforced");
+  // The ad banner needs INTERNET. Everything else about the privacy posture has
+  // to hold harder because of it: the SDK may talk to the network, the app's own
+  // code may not, and Auto Backup still may not copy the plan off the device.
+  if (/android\.permission\.INTERNET"[^>]*tools:node="remove"/.test(manifest)) {
+    failures.push("INTERNET must stay granted, the ad SDK cannot load a banner without it");
+  }
+  if (!/android\.permission\.INTERNET/.test(manifest)) {
+    failures.push("INTERNET permission must be declared for the ad SDK");
+  }
+  if (!manifest.includes("com.google.android.gms.ads.APPLICATION_ID")) {
+    failures.push("AdMob APPLICATION_ID meta-data is missing, the SDK crashes on start without it");
+  }
+  const strings = await readIfPresent("android/app/src/main/res/values/strings.xml");
+  if (strings !== null && !strings.includes('name="admob_app_id"')) {
+    failures.push("admob_app_id string resource is missing");
   }
 }
 
