@@ -27,16 +27,26 @@ Changing any of these breaks installed users or is rejected by Play.
 
 ## Privacy posture
 
-Two settings make the store declarations in `docs/store/data-safety.md` true.
-Do not relax either without changing those answers first.
+The app embeds the Google Mobile Ads SDK, so it is no longer permissionless.
+Full detail in `.agents/ads.md`; the store declarations it makes true live in
+`docs/store/data-safety.md`.
 
 - `android:allowBackup="false"` plus `backup_rules.xml` and
   `data_extraction_rules.xml`. Auto Backup would copy the user's financial data
-  to Google Drive.
-- The `INTERNET` permission is removed with `tools:node="remove"`, so the
-  merged manifest requests no device permissions at all and the OS enforces the
-  offline promise. Re-adding it would make the app capable of network calls
-  even though it makes none.
+  to Google Drive. This one is still absolute.
+- `INTERNET` is granted, because the ad SDK cannot load a banner without it.
+  The SDK merges in eight further permissions; `data-safety.md` lists all nine.
+  None is a runtime permission, so the user is never prompted.
+- The app's own code still makes no network calls, and `scripts/check.mjs`
+  fails if `fetch`, `XMLHttpRequest` or `WebSocket` appears in `index.html`.
+  That check is what keeps the privacy policy honest — treat it as load-bearing.
+
+Verify the real permission set after any dependency change:
+
+```sh
+cd android && ./gradlew.bat assembleDebug
+grep -o 'uses-permission[^/]*' app/build/intermediates/merged_manifest/debug/*/AndroidManifest.xml | sort -u
+```
 
 ## Demo state
 

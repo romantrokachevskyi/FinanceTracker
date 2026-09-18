@@ -4,4 +4,7 @@
     <string name="title_activity_main">До зарплати</string>
     <string name="package_name">io.github.romantrokachevskyi.dozarplaty</string>
     <string name="custom_url_scheme">io.github.romantrokachevskyi.dozarplaty</string>
+    <!-- Google's public test app ID. Replace with the real AdMob app ID before
+         a release build, or every impression stays a test impression. -->
+    <string name="admob_app_id">ca-app-pub-7574415603200995~2591131558</string>
 </resources>

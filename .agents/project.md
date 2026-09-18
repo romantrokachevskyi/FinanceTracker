@@ -8,7 +8,9 @@ work. The code remains authoritative when these notes disagree with it.
 - The app is a static site with no dependencies or build step.
 - `index.html` contains the markup, styles, and application script.
 - `manifest.webmanifest` and `icons/` provide the installable home-screen app metadata.
-- User data stays in browser `localStorage`; the app makes no network calls.
+- User data stays in browser `localStorage`; the app's own code makes no network
+  calls. Only the embedded Google Mobile Ads SDK talks to the network, and it
+  never receives that data — see `.agents/ads.md`.
 - The interface supports Ukrainian and English, defaults to Ukrainian, and the primary viewport is mobile.
 
 ## User flow

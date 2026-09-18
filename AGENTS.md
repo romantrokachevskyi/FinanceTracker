@@ -5,8 +5,9 @@ Vendor adapters must reference it, not duplicate it.
 
 ## Product
 
-FinanceTracker is an offline, Ukrainian-first bilingual, mobile-first web app that
-answers one question: how much can the user safely spend each day until payday?
+FinanceTracker is an offline-first, Ukrainian-first bilingual, mobile-first web
+app that answers one question: how much can the user safely spend each day until
+payday? It is free, and one ad banner pays for it.
 
 ## Start here
 
@@ -16,7 +17,9 @@ answers one question: how much can the user safely spend each day until payday?
 3. Read `.agents/workflow.md` before implementing or reviewing a change.
 4. Read `.agents/android-release.md` before changing packaging, signing, app
    identity, or store artifacts.
-5. Inspect the relevant code; do not rely on these notes when the code can
+5. Read `.agents/ads.md` before changing the banner, the visit counter, or
+   anything touching the privacy posture or store declarations.
+6. Inspect the relevant code; do not rely on these notes when the code can
    answer a question directly.
 
 ## Non-negotiable contracts
@@ -26,8 +29,10 @@ answers one question: how much can the user safely spend each day until payday?
   legacy data during page load.
 - Merge additive state changes so unknown properties survive.
 - Keep malformed data recoverable before an explicit replacement.
-- Keep the app offline and private: no telemetry, accounts, or network calls
-  unless a product requirement explicitly changes that boundary.
+- Keep the app's own code offline and private: no telemetry, accounts, or
+  network calls. The one sanctioned exception is the Google Mobile Ads SDK,
+  which shows a banner after ten days of use — see `.agents/ads.md`. Financial
+  data must never reach it or any other third party.
 - Keep Ukrainian and English UI copy consistent and optimize for narrow touch screens.
 - Maintain keyboard access, visible focus, inline errors, and WCAG AA contrast.
 

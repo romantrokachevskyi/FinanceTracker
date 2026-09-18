@@ -22,6 +22,8 @@ function requireMatch(pattern, message) {
 requireMatch(/<html\s+lang="uk">/, "index.html must keep Ukrainian as the no-script default locale");
 requireMatch(/viewport-fit=cover/, "mobile viewport must preserve safe-area support");
 requireMatch(/const KEY="financeTrackerStateV1"/, "primary storage key changed");
+requireMatch(/const ADS_KEY="financeTrackerAdsV1"/, "ad visit counter must keep its own storage key");
+requireMatch(/const AD_AFTER_VISITS=/, "ad visit threshold must stay a source constant");
 requireMatch(/Date\.UTC\(/, "calendar calculations must remain DST-safe");
 requireMatch(/<form\b/, "interactive inputs must retain form semantics");
 requireMatch(/id="showCheckIn"[^>]+aria-controls="checkInPanel"/, "balance check-in must remain an inline disclosure");
@@ -57,7 +59,7 @@ for (const [, source] of scripts) {
   }
 }
 
-if (scripts.length === 1) failures.push(...checkBehavior(scripts[0][1]));
+if (scripts.length === 1) failures.push(...await checkBehavior(scripts[0][1]));
 
 failures.push(...await checkAndroid());
 

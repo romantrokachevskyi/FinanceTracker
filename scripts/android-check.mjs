@@ -102,8 +102,44 @@ async function checkPrivacy(failures) {
   if (!manifest.includes("android:dataExtractionRules")) {
     failures.push("dataExtractionRules must be declared");
   }
-  if (!manifest.includes('android.permission.INTERNET" tools:node="remove"')) {
-    failures.push("INTERNET permission must stay removed so the offline promise is OS-enforced");
+  // The ad banner needs INTERNET. Everything else about the privacy posture has
+  // to hold harder because of it: the SDK may talk to the network, the app's own
+  // code may not, and Auto Backup still may not copy the plan off the device.
+  if (/android\.permission\.INTERNET"[^>]*tools:node="remove"/.test(manifest)) {
+    failures.push("INTERNET must stay granted, the ad SDK cannot load a banner without it");
+  }
+  if (!/android\.permission\.INTERNET/.test(manifest)) {
+    failures.push("INTERNET permission must be declared for the ad SDK");
+  }
+  if (!manifest.includes("com.google.android.gms.ads.APPLICATION_ID")) {
+    failures.push("AdMob APPLICATION_ID meta-data is missing, the SDK crashes on start without it");
+  }
+  const strings = await readIfPresent("android/app/src/main/res/values/strings.xml");
+  if (strings !== null && !strings.includes('name="admob_app_id"')) {
+    failures.push("admob_app_id string resource is missing");
+  }
+  await checkAdIds(failures, strings);
+}
+
+const TEST_AD_PUBLISHER = "3940256099942544";
+
+// The app ID and the ad unit ID live in two files in two languages. When they
+// come from different AdMob accounts nothing errors: the banner just never
+// fills, which is close to undiagnosable from the app side.
+async function checkAdIds(failures, strings) {
+  const html = await readIfPresent("index.html");
+  const publisherOf = (value) => value?.match(/ca-app-pub-(\d+)/)?.[1] ?? null;
+  const unitPublisher = publisherOf(html?.match(/const AD_BANNER_ID="([^"]+)"/)?.[1]);
+  const appPublisher = publisherOf(strings?.match(/name="admob_app_id">([^<]+)</)?.[1]);
+  if (unitPublisher === null || appPublisher === null) {
+    failures.push("both the AdMob app ID and the banner ad unit ID must be set");
+    return;
+  }
+  if (unitPublisher !== appPublisher) {
+    failures.push(`AdMob publisher mismatch: app ID is ${appPublisher}, ad unit is ${unitPublisher}`);
+  }
+  if (unitPublisher === TEST_AD_PUBLISHER || appPublisher === TEST_AD_PUBLISHER) {
+    failures.push("Google's test AdMob IDs are still in place, so the app would earn nothing");
   }
 }
 

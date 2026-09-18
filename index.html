@@ -13,7 +13,7 @@
   <style>
     :root{color-scheme:light;--ink:#102a43;--muted:#526f8a;--line:#d9e2ec;--surface:#fff;--soft:#f0f4f8;--brand:#0f766e;--brand-dark:#115e59;--good:#166534;--warn:#9a3412;--error:#b42318}
     *{box-sizing:border-box}
-    body{margin:0;min-height:100vh;min-height:100dvh;font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:#eaf2f6;color:var(--ink);display:grid;place-items:start center;padding:max(20px,env(safe-area-inset-top)) max(16px,env(safe-area-inset-right)) max(20px,env(safe-area-inset-bottom)) max(16px,env(safe-area-inset-left))}
+    body{margin:0;min-height:100vh;min-height:100dvh;font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:#eaf2f6;color:var(--ink);display:grid;place-items:start center;padding:max(20px,env(safe-area-inset-top)) max(16px,env(safe-area-inset-right)) max(20px,env(safe-area-inset-bottom)) max(16px,env(safe-area-inset-left));padding-bottom:calc(max(20px,env(safe-area-inset-bottom)) + var(--ad-height,0px))}
     .card{width:min(100%,430px);background:var(--surface);border-radius:24px;padding:clamp(20px,6vw,28px);box-shadow:0 12px 40px rgba(16,42,67,.1)}
     h1,h2,p{margin-top:0} h1{margin-bottom:6px;font-size:clamp(24px,7vw,30px);letter-spacing:-.02em} h2{margin-bottom:6px;font-size:20px}
     .muted{color:var(--muted);margin-bottom:24px}.small{font-size:14px}
@@ -121,6 +121,10 @@
     const KEY="financeTrackerStateV1";
     const BACKUP_KEY="financeTrackerStateV1Backup";
     const LOCALE_KEY="financeTrackerLocaleV1";
+    const ADS_KEY="financeTrackerAdsV1";
+    // Separate days the app was opened before the banner appears.
+    const AD_AFTER_VISITS=10;
+    const AD_BANNER_ID="ca-app-pub-7574415603200995/8280862929";
     const translations={
       uk:{
         title:"До зарплати",subtitle:"Контролюйте витрати до наступної зарплати",switchLocale:"Switch to English",
@@ -246,6 +250,42 @@
         localStorage.setItem(KEY,serialized);
         rawStoredState=serialized;loadedState=nextState;stateProblem=null;return true;
       }catch(error){return false}
+    }
+    function readAdState(){
+      const empty={visits:0,lastVisitDate:null};
+      try{
+        const parsed=JSON.parse(localStorage.getItem(ADS_KEY));
+        if(!parsed||typeof parsed!=="object"||Array.isArray(parsed))return empty;
+        const visits=parsed.visits,lastVisitDate=parsed.lastVisitDate??null;
+        if(!Number.isInteger(visits)||visits<0)return empty;
+        if(lastVisitDate!==null&&dateOrdinal(lastVisitDate)===null)return empty;
+        return{visits,lastVisitDate};
+      }catch(error){return empty}
+    }
+    function countVisit(adState,today){
+      return adState.lastVisitDate===today?adState:{visits:adState.visits+1,lastVisitDate:today};
+    }
+    function shouldShowAds(adState){return adState.visits>=AD_AFTER_VISITS}
+    function persistAdState(adState){
+      try{localStorage.setItem(ADS_KEY,JSON.stringify(adState))}catch(error){}
+    }
+    async function startAds(){
+      try{
+        if(!window.Capacitor?.isNativePlatform?.())return;
+        const adMob=window.Capacitor.Plugins?.AdMob;
+        if(!adMob)return;
+        await adMob.initialize();
+        let consent=await adMob.requestConsentInfo();
+        if(consent.status==="REQUIRED"&&consent.isConsentFormAvailable)consent=await adMob.showConsentForm();
+        // Gate on the status UMP always returns, not on canRequestAds alone: an
+        // error path that omits the field must not read as "consent given".
+        if(consent.status!=="OBTAINED"&&consent.status!=="NOT_REQUIRED")return;
+        if(consent.canRequestAds===false)return;
+        await adMob.addListener("bannerAdSizeChanged",size=>{
+          document.documentElement.style.setProperty("--ad-height",`${size.height}px`);
+        });
+        await adMob.showBanner({adId:AD_BANNER_ID,adSize:"ADAPTIVE_BANNER",position:"BOTTOM_CENTER",isTesting:AD_BANNER_ID.startsWith("ca-app-pub-3940256099942544")});
+      }catch(error){}
     }
     function money(value){
       return new Intl.NumberFormat(currentLocale==="uk"?"uk-UA":"en",{minimumFractionDigits:Number.isInteger(value)?0:2,maximumFractionDigits:2}).format(Math.max(0,value))+" ₴";
@@ -407,6 +447,9 @@
     });
     applyStaticTranslations();
     updateInstallButton();
+    const previousAdState=readAdState(),adState=countVisit(previousAdState,localDateString());
+    if(adState!==previousAdState)persistAdState(adState);
+    if(shouldShowAds(adState))startAds();
     initialize();
   </script>
 </body>
