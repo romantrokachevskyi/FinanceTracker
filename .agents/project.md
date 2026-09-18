@@ -74,9 +74,10 @@ Compatibility rules:
   detection existed); otherwise `uk` when any device language is Ukrainian or
   its region is `UA`, else `en`. An unrecognized stored value counts as no
   choice.
-- Creating a plan stores the current locale when no choice is stored. Without
-  that, the next launch would read the new plan as pre-detection data and
-  switch the user to Ukrainian. Check-ins never write the locale.
+- Creating a plan or starting a new period stores the current locale when no
+  choice is stored. Without that, the next launch would read the new plan as
+  pre-detection data and switch the user to Ukrainian. Check-ins never write
+  the locale.
 - The Android launcher name follows the same split: `values/` holds "Until
   Payday" for every language, `values-uk/` holds "До зарплати".
 
