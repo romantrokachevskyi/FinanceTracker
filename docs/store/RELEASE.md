@@ -133,11 +133,13 @@ npm run capture:store
 npm run shots
 ```
 
-The first writes raw captures of every seed in `scripts/store-seeds.mjs`, in
-English and Ukrainian, to the gitignored `assets/raw/`; it clears the app's
-data on that device. The second crops them to 1080 × 1920 and renders each
-language's `feature-graphic.svg`. Edit a feature graphic's text in its SVG,
-never in the PNG.
+The first writes raw captures of every shot in `scripts/store-seeds.mjs`, in
+English and Ukrainian, to the gitignored `assets/raw/`. It replaces the app's
+local data on that device and leaves a demo plan behind. Demo dates come from
+the computer's clock, so keep the device in the same time zone. The second
+crops the captures to 1080 × 1920 and renders each language's
+`feature-graphic.svg`; it refuses to run without a full set of raw captures.
+Edit a feature graphic's text in its SVG, never in the PNG.
 
 ## Testing the banner without waiting ten days
 

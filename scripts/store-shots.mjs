@@ -10,9 +10,10 @@
 // which is why every capture here is well above it.
 
 import { execFile } from "node:child_process";
-import { mkdir, writeFile, readFile, rm } from "node:fs/promises";
+import { access, mkdir, writeFile, readFile, rm } from "node:fs/promises";
 import { promisify } from "node:util";
 import { fileURLToPath, pathToFileURL } from "node:url";
+import { STORE_LANGUAGES, STORE_SHOTS } from "./store-seeds.mjs";
 
 const run = promisify(execFile);
 
@@ -28,8 +29,8 @@ const WIDTH = 1080;
 const HEIGHT = 1920;
 const TOP_TRIM = 140; // status bar
 
-const LANGUAGES = ["en", "uk"];
-const SCREENSHOTS = ["01-setup", "02-dashboard", "03-checkin", "04-payday"];
+const LANGUAGES = Object.keys(STORE_LANGUAGES);
+const SCREENSHOTS = Object.keys(STORE_SHOTS);
 
 async function shoot(url, file, width, height) {
   await run(CHROME, [
@@ -47,6 +48,19 @@ async function shoot(url, file, width, height) {
 async function dimensions(file) {
   const bytes = await readFile(file);
   return `${bytes.readUInt32BE(16)}x${bytes.readUInt32BE(20)}`;
+}
+
+// Chrome renders a missing image as a blank page of the right size, which
+// would silently replace the committed screenshots. Refuse instead.
+for (const language of LANGUAGES) {
+  for (const name of SCREENSHOTS) {
+    try {
+      await access(new URL(`${language}/${name}.png`, RAW));
+    } catch {
+      console.error(`missing raw capture ${fileURLToPath(new URL(`${language}/${name}.png`, RAW))}; run npm run capture:store first`);
+      process.exit(1);
+    }
+  }
 }
 
 for (const language of LANGUAGES) {

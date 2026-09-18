@@ -38,3 +38,14 @@ export const SEEDS = {
     }
   })
 };
+
+// Store listing language → Android locale, which also sets date formats.
+export const STORE_LANGUAGES = { en: "en-US", uk: "uk-UA" };
+
+// Screenshot file name → seed, in listing order.
+export const STORE_SHOTS = {
+  "01-setup": "setup",
+  "02-dashboard": "dashboard",
+  "03-checkin": "checkin",
+  "04-payday": "payday"
+};

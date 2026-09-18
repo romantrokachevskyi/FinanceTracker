@@ -59,6 +59,13 @@ English with "UA" on the toggle; after `cmd locale set-app-locales … uk-UA` an
 a data clear it opens in Ukrainian, dates as `25.09.2026`. The WebView exposes
 the app locale through `navigator.languages`.
 
+## Store artwork (2026-09-18)
+
+`npm run capture:store` then `npm run shots` on the Android 16 emulator
+produced all ten images in `assets/en/` and `assets/uk/` at Play's sizes, each
+screen in its own UI language with no focus outline or keyboard. A second run
+reproduced them byte for byte, and left no port forward or app locale behind.
+
 ## Still open
 
 - Physical hardware, any model.
