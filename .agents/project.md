@@ -11,7 +11,8 @@ work. The code remains authoritative when these notes disagree with it.
 - User data stays in browser `localStorage`; the app's own code makes no network
   calls. Only the embedded Google Mobile Ads SDK talks to the network, and it
   never receives that data — see `.agents/ads.md`.
-- The interface supports Ukrainian and English, defaults to Ukrainian, and the primary viewport is mobile.
+- The interface supports Ukrainian and English, opens in the device language
+  (see Localization contract), and the primary viewport is mobile.
 
 ## User flow
 
@@ -68,7 +69,17 @@ Compatibility rules:
   in-progress value and preview.
 - Money suffix is `translations.<locale>.currency`: `₴` for `uk`, the generic
   sign `¤` (U+00A4) for `en`, because an English user's currency is unknown.
-- An unrecognized stored locale falls back to Ukrainian without writing storage.
+- Startup locale, first match wins, and nothing is written: a stored `uk`/`en`
+  choice; `uk` when a plan is already stored (every user saw Ukrainian before
+  detection existed); otherwise `uk` when any device language is Ukrainian or
+  its region is `UA`, else `en`. An unrecognized stored value counts as no
+  choice.
+- Creating a plan or starting a new period stores the current locale when no
+  choice is stored. Without that, the next launch would read the new plan as
+  pre-detection data and switch the user to Ukrainian. Check-ins never write
+  the locale.
+- The Android launcher name follows the same split: `values/` holds "Until
+  Payday" for every language, `values-uk/` holds "До зарплати".
 
 ## Calculation model
 

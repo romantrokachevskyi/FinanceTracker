@@ -9,7 +9,7 @@ Fixed values used below:
 | What | Value |
 | --- | --- |
 | Package name | `io.github.romantrokachevskyi.dozarplaty` (permanent) |
-| App name | До зарплати (default, Ukrainian) · Until Payday (English) |
+| App name | Until Payday (default, English) · До зарплати (Ukrainian) |
 | Privacy policy URL | `https://romantrokachevskyi.github.io/FinanceTracker/docs/privacy/` |
 | Developer website | `https://romantrokachevskyi.github.io` |
 | AdMob publisher | `pub-7574415603200995` |
@@ -71,13 +71,16 @@ builds. `versionName` changes only for real releases.
 
 ## 5. Create the app in Play Console (you)
 
-1. **Create app**: default language Ukrainian, name **До зарплати**, **App**,
-   **Free**. Accept the declarations.
+1. **Create app**: name **Until Payday**, package name as in the table,
+   default language **English (United States) – en-US**, **App**, **Free**.
+   Accept the declarations. English is the default because Play shows it to
+   every language without its own translation; the app itself opens in the
+   device language.
 2. **Store settings**: category **Finance**; contact email of your choice
    (shown publicly); website `https://romantrokachevskyi.github.io` — this is
    what points AdMob at `app-ads.txt`.
-3. **Main store listing**: paste `listing-uk.md`; add an English (en-US)
-   translation from `listing-en.md`. Graphics: `icons/app-icon-512.png`
+3. **Main store listing**: paste `listing-en.md`; add a Ukrainian (uk)
+   translation from `listing-uk.md`. Graphics: `icons/app-icon-512.png`
    (icon), `assets/feature-graphic.png`, and the four phone screenshots in
    `assets/`.
 4. **App content**: privacy policy URL from the table above, then every
@@ -85,9 +88,10 @@ builds. `versionName` changes only for real releases.
    available without login), Target audience, Data safety, Financial features,
    Advertising ID, Government apps, Health.
 5. **Content rating**: the IARC questionnaire, answers in `data-safety.md`.
-6. **Countries**: Ukraine at minimum. Add EEA, UK and Swiss countries only
-   after step 2 is done and the EEA consent run listed as open in
-   `verification.md` has passed.
+6. **Countries**: the app is ready for all countries. Include EEA, UK and
+   Swiss countries only after step 2 is done and the EEA consent run listed as
+   open in `verification.md` has passed; until then select every other
+   country and add those later — no new upload is needed.
 
 ## 6. Test track and production (you)
 

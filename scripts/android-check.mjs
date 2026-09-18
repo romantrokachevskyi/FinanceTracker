@@ -45,6 +45,7 @@ async function checkGitignore(failures) {
 
 const APP_ID = "io.github.romantrokachevskyi.dozarplaty";
 const APP_NAME_UK = "До зарплати";
+const APP_NAME_EN = "Until Payday";
 
 async function checkIdentity(failures) {
   const raw = await readIfPresent("capacitor.config.json");
@@ -82,11 +83,17 @@ async function checkIdentity(failures) {
     }
   }
 
+  // English is the default resource so every language without its own gets
+  // the English launcher name, matching the English UI the app opens in.
   const strings = await readIfPresent("android/app/src/main/res/values/strings.xml");
   if (strings === null) {
     failures.push("android strings.xml is missing");
-  } else if (!strings.includes(`>${APP_NAME_UK}<`)) {
-    failures.push(`android app_name must be ${APP_NAME_UK}`);
+  } else if (!strings.includes(`>${APP_NAME_EN}<`)) {
+    failures.push(`android default app_name must be ${APP_NAME_EN}`);
+  }
+  const stringsUk = await readIfPresent("android/app/src/main/res/values-uk/strings.xml");
+  if (stringsUk === null || !stringsUk.includes(`>${APP_NAME_UK}<`)) {
+    failures.push(`android values-uk app_name must be ${APP_NAME_UK}`);
   }
 }
 

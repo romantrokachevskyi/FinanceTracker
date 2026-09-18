@@ -16,7 +16,7 @@ const defaultConsentInfo = { status: "NOT_REQUIRED", isConsentFormAvailable: fal
 // must too, or the app would look like it ignores its own consent gate.
 const defaultConsentAfterForm = { status: "OBTAINED", isConsentFormAvailable: true, canRequestAds: true };
 
-function createAppHarness(source, initialState, { failReads = false, failWrites = false, locale, ads, capacitor = false, consentInfo = defaultConsentInfo, consentAfterForm = defaultConsentAfterForm } = {}) {
+function createAppHarness(source, initialState, { failReads = false, failWrites = false, locale, ads, capacitor = false, consentInfo = defaultConsentInfo, consentAfterForm = defaultConsentAfterForm, languages = ["uk-UA"], language = languages?.[0] } = {}) {
   const values = new Map();
   if (initialState !== undefined) values.set("financeTrackerStateV1", JSON.stringify(initialState));
   if (locale !== undefined) values.set("financeTrackerLocaleV1", locale);
@@ -85,7 +85,7 @@ function createAppHarness(source, initialState, { failReads = false, failWrites 
       }
     };
   }
-  const context = vm.createContext({ document, localStorage, window, navigator: { userAgent: "", platform: "", maxTouchPoints: 0 }, Intl, Date });
+  const context = vm.createContext({ document, localStorage, window, navigator: { userAgent: "", platform: "", maxTouchPoints: 0, languages, language }, Intl, Date });
   vm.runInContext(source, context);
   return {
     context, element, document, localStorage, adCalls,
@@ -144,6 +144,49 @@ export async function checkBehavior(source) {
   const unknownLocaleApp = createAppHarness(source, activeState, { locale: "fr", ads: countedToday });
   requireBehavior(unknownLocaleApp.context.document.documentElement.lang === "uk", "unknown locale preference must safely fall back to Ukrainian");
   requireBehavior(unknownLocaleApp.writes === 0, "unknown locale fallback must not eagerly rewrite storage");
+
+  // A first launch follows the device: Ukrainian for a Ukrainian language or a
+  // Ukrainian region anywhere in the list, English everywhere else.
+  const worldApp = createAppHarness(source, undefined, { languages: ["en-US"] });
+  requireBehavior(worldApp.context.document.documentElement.lang === "en", "a first launch on a non-Ukrainian device must open in English");
+  requireBehavior(worldApp.element("localeToggle").textContent === "UA", "an English first launch must offer Ukrainian");
+  requireBehavior(worldApp.writesFor("financeTrackerLocaleV1") === 0, "detecting the device language must not store a preference");
+  const secondaryUkrainianApp = createAppHarness(source, undefined, { languages: ["de-DE", "uk"] });
+  requireBehavior(secondaryUkrainianApp.context.document.documentElement.lang === "uk", "Ukrainian anywhere in the device languages must open in Ukrainian");
+  const ukrainianRegionApp = createAppHarness(source, undefined, { languages: ["ru-UA"] });
+  requireBehavior(ukrainianRegionApp.context.document.documentElement.lang === "uk", "a device set to the Ukrainian region must open in Ukrainian");
+  const singleLanguageApp = createAppHarness(source, undefined, { languages: [], language: "uk-UA" });
+  requireBehavior(singleLanguageApp.context.document.documentElement.lang === "uk", "a browser exposing only navigator.language must still be detected");
+  const unreadableWorldApp = createAppHarness(source, undefined, { failReads: true, languages: ["en-US"] });
+  requireBehavior(unreadableWorldApp.context.document.documentElement.lang === "en", "unreadable storage must still follow the device language");
+  requireBehavior(unreadableWorldApp.element("savePlan").disabled, "unreadable storage must keep plan creation blocked in any language");
+  // Before detection existed every user saw Ukrainian; one with a plan and no
+  // stored choice keeps it rather than flipping to match their browser.
+  const legacyApp = createAppHarness(source, activeState, { languages: ["en-US"], ads: countedToday });
+  requireBehavior(legacyApp.context.document.documentElement.lang === "uk", "an existing plan without a stored locale must stay in Ukrainian");
+  requireBehavior(legacyApp.writesFor("financeTrackerLocaleV1") === 0, "keeping a legacy user in Ukrainian must not store a preference");
+  const chosenUkrainianApp = createAppHarness(source, undefined, { locale: "uk", languages: ["en-US"] });
+  requireBehavior(chosenUkrainianApp.context.document.documentElement.lang === "uk", "a stored locale choice must win over the device language");
+  requireBehavior(chosenUkrainianApp.writesFor("financeTrackerLocaleV1") === 0, "honouring a stored locale must not rewrite it");
+
+  // The first plan pins the language it was made in. Otherwise the legacy rule
+  // would read that plan as pre-detection data and switch to Ukrainian.
+  const createPlan = (app) => {
+    app.element("balance").value = "30000";
+    app.element("salaryDate").value = localDate(7);
+    app.element("planForm").dispatch("submit");
+  };
+  const newWorldUserApp = createAppHarness(source, undefined, { languages: ["en-US"] });
+  createPlan(newWorldUserApp);
+  requireBehavior(newWorldUserApp.localStorage.getItem("financeTrackerStateV1") !== null, "the plan form must save a plan in this test");
+  requireBehavior(newWorldUserApp.localStorage.getItem("financeTrackerLocaleV1") === "en", "the first plan must store the language it was made in");
+  const relaunchedWorldApp = createAppHarness(source, JSON.parse(newWorldUserApp.localStorage.getItem("financeTrackerStateV1")), {
+    languages: ["en-US"], locale: newWorldUserApp.localStorage.getItem("financeTrackerLocaleV1"), ads: countedToday
+  });
+  requireBehavior(relaunchedWorldApp.context.document.documentElement.lang === "en", "an English user must still see English after creating a plan");
+  const choseBeforePlanApp = createAppHarness(source, undefined, { locale: "uk", languages: ["en-US"] });
+  createPlan(choseBeforePlanApp);
+  requireBehavior(choseBeforePlanApp.writesFor("financeTrackerLocaleV1") === 0, "a plan must not rewrite a language the user already chose");
 
   const unreadableApp = createAppHarness(source, undefined, { failReads: true });
   requireBehavior(unreadableApp.element("savePlan").disabled, "unreadable storage must block plan creation");

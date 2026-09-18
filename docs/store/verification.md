@@ -52,6 +52,13 @@ queries and render the same in a desktop browser.
 `upload` alias: RSA 4096, SHA256withRSA, valid until 2054. The bundle carries
 the live ad unit and `AD_AFTER_VISITS=10`.
 
+## First-launch language (2026-09-18, debug build)
+
+Fresh installs on the emulator: with the system in English the app opens in
+English with "UA" on the toggle; after `cmd locale set-app-locales … uk-UA` and
+a data clear it opens in Ukrainian, dates as `25.09.2026`. The WebView exposes
+the app locale through `navigator.languages`.
+
 ## Still open
 
 - Physical hardware, any model.
