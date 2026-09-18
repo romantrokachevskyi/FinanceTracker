@@ -75,14 +75,24 @@ non-personalised ads at a lower rate.
 
 ## Ad unit IDs
 
-`AD_BANNER_ID` in `index.html` and `admob_app_id` in
-`android/app/src/main/res/values/strings.xml` both hold Google's public **test**
-IDs. `isTesting` is derived from the test publisher prefix
-`ca-app-pub-3940256099942544`, so replacing the two IDs is the only edit needed
-to go live — there is no separate flag to forget.
+Two IDs, in two files, from one AdMob account:
 
-Never ship real IDs with `isTesting` forced on, and never click your own live
-ads: AdMob suspends accounts for it.
+- `AD_BANNER_ID` in `index.html` — the banner **ad unit** (`ca-app-pub-…/…`)
+- `admob_app_id` in `android/app/src/main/res/values/strings.xml` — the
+  **app** ID (`ca-app-pub-…~…`)
+
+Both currently hold the project's live IDs. `isTesting` is derived from the
+Google test publisher prefix `ca-app-pub-3940256099942544`, so there is no flag
+to forget in either direction.
+
+`scripts/android-check.mjs` fails the build if the two publisher IDs disagree or
+if either reverts to a Google test ID. The mismatch case is why: nothing errors
+at runtime, the banner simply never fills, and that is close to undiagnosable
+from inside the app.
+
+To test against Google's test units, swap both IDs back together and expect the
+checker to fail until you swap them forward again. Never click your own live
+ads — AdMob suspends accounts for it.
 
 ## Out of scope by decision
 

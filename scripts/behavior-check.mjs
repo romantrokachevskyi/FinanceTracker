@@ -9,6 +9,8 @@ function localDate(offset = 0) {
   return `${year}-${month}-${day}`;
 }
 
+const TEST_AD_PUBLISHER = "ca-app-pub-3940256099942544";
+
 const defaultConsentInfo = { status: "NOT_REQUIRED", isConsentFormAvailable: false, canRequestAds: true };
 // UMP returns updated consent once the user has answered the form, so the fake
 // must too, or the app would look like it ignores its own consent gate.
@@ -211,10 +213,14 @@ export async function checkBehavior(source) {
   const bannerApp = createAppHarness(source, activeState, { capacitor: true, ads: { visits: 9, lastVisitDate: localDate(-1) } });
   await flush();
   const bannerOptions = bannerApp.adCalls.find((call) => call.name === "showBanner")?.args[0];
+  // Read the configured unit out of the source so swapping test IDs for real
+  // ones stays a two-string edit and does not drag the suite along with it.
+  const configuredAdId = source.match(/const AD_BANNER_ID="([^"]+)"/)?.[1] ?? null;
   requireBehavior(Boolean(bannerOptions), "the tenth day of use must show the banner");
   requireBehavior(bannerOptions?.position === "BOTTOM_CENTER", "the banner must stay anchored to the bottom");
   requireBehavior(bannerOptions?.adSize === "ADAPTIVE_BANNER", "the banner must size itself adaptively");
-  requireBehavior(bannerOptions?.isTesting === true, "a Google test ad unit must request test ads");
+  requireBehavior(bannerOptions?.adId === configuredAdId, "the banner must request the configured ad unit");
+  requireBehavior(bannerOptions?.isTesting === configuredAdId?.startsWith(TEST_AD_PUBLISHER), "test ads must be requested for a Google test unit, and only for one");
 
   const belowThresholdApp = createAppHarness(source, activeState, { capacitor: true, ads: { visits: 8, lastVisitDate: localDate(-1) } });
   await flush();

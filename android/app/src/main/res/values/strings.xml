@@ -6,5 +6,5 @@
     <string name="custom_url_scheme">io.github.romantrokachevskyi.dozarplaty</string>
     <!-- Google's public test app ID. Replace with the real AdMob app ID before
          a release build, or every impression stays a test impression. -->
-    <string name="admob_app_id">ca-app-pub-3940256099942544~3347511713</string>
+    <string name="admob_app_id">ca-app-pub-7574415603200995~2591131558</string>
 </resources>
