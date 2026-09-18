@@ -285,6 +285,15 @@
           document.documentElement.style.setProperty("--ad-height",`${size.height}px`);
         });
         await adMob.showBanner({adId:AD_BANNER_ID,adSize:"ADAPTIVE_BANNER",position:"BOTTOM_CENTER",isTesting:AD_BANNER_ID.startsWith("ca-app-pub-3940256099942544")});
+        // The SDK re-anchors the banner above the keyboard, over the field being
+        // typed in. A focused text field is the keyboard, so hide it meanwhile.
+        const isTextField=target=>target?.tagName==="INPUT"||target?.tagName==="TEXTAREA";
+        document.addEventListener("focusin",event=>{
+          if(isTextField(event.target))adMob.hideBanner().catch(()=>{});
+        });
+        document.addEventListener("focusout",event=>{
+          if(isTextField(event.target)&&!isTextField(event.relatedTarget))adMob.resumeBanner().catch(()=>{});
+        });
       }catch(error){}
     }
     function money(value){

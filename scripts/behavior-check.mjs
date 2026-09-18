@@ -44,7 +44,12 @@ function createAppHarness(source, initialState, { failReads = false, failWrites 
     elements.set(id, value);
     return value;
   }
-  document = { activeElement: null, title: "", documentElement: { lang: "uk" }, getElementById: element };
+  const documentListeners = {};
+  document = {
+    activeElement: null, title: "", documentElement: { lang: "uk" }, getElementById: element,
+    addEventListener(type, listener) { (documentListeners[type] ??= []).push(listener); },
+    dispatch(type, event = {}) { for (const listener of documentListeners[type] ?? []) listener(event); }
+  };
   const localStorage = {
     getItem(key) {
       if (failReads) throw new Error("storage unavailable");
@@ -72,6 +77,8 @@ function createAppHarness(source, initialState, { failReads = false, failWrites 
           requestConsentInfo: record("requestConsentInfo", consentInfo),
           showConsentForm: record("showConsentForm", consentAfterForm),
           showBanner: record("showBanner"),
+          hideBanner: record("hideBanner"),
+          resumeBanner: record("resumeBanner"),
           addListener: record("addListener", { remove() {} })
         }
       }
@@ -80,7 +87,7 @@ function createAppHarness(source, initialState, { failReads = false, failWrites 
   const context = vm.createContext({ document, localStorage, window, navigator: { userAgent: "", platform: "", maxTouchPoints: 0 }, Intl, Date });
   vm.runInContext(source, context);
   return {
-    context, element, localStorage, adCalls,
+    context, element, document, localStorage, adCalls,
     adCallNames() { return adCalls.map((call) => call.name); },
     get writes() { return writes; },
     writesFor(key) { return writesByKey.get(key) ?? 0; }
@@ -222,6 +229,18 @@ export async function checkBehavior(source) {
   requireBehavior(bannerOptions?.adId === configuredAdId, "the banner must request the configured ad unit");
   requireBehavior(bannerOptions?.isTesting === configuredAdId?.startsWith(TEST_AD_PUBLISHER), "test ads must be requested for a Google test unit, and only for one");
 
+  // With the keyboard up the SDK re-anchors the banner above it, which puts an
+  // ad over the field being typed in. A focused text field is the keyboard.
+  const field = { tagName: "INPUT" }, otherField = { tagName: "INPUT" }, button = { tagName: "BUTTON" };
+  bannerApp.document.dispatch("focusin", { target: button });
+  requireBehavior(!bannerApp.adCallNames().includes("hideBanner"), "focusing a button must leave the banner up");
+  bannerApp.document.dispatch("focusin", { target: field });
+  requireBehavior(bannerApp.adCallNames().includes("hideBanner"), "typing into a field must hide the banner");
+  bannerApp.document.dispatch("focusout", { target: field, relatedTarget: otherField });
+  requireBehavior(!bannerApp.adCallNames().includes("resumeBanner"), "moving between fields must keep the banner hidden");
+  bannerApp.document.dispatch("focusout", { target: otherField, relatedTarget: null });
+  requireBehavior(bannerApp.adCallNames().includes("resumeBanner"), "leaving the fields must bring the banner back");
+
   const belowThresholdApp = createAppHarness(source, activeState, { capacitor: true, ads: { visits: 8, lastVisitDate: localDate(-1) } });
   await flush();
   requireBehavior(!belowThresholdApp.adCallNames().includes("showBanner"), "the ninth day of use must stay free of ads");
@@ -247,6 +266,9 @@ export async function checkBehavior(source) {
   requireBehavior(refusedConsentApp.adCallNames().includes("requestConsentInfo"), "the ad flow must reach the consent decision before it gives up");
   requireBehavior(!refusedConsentApp.adCallNames().includes("showConsentForm"), "an unavailable consent form must not be requested");
   requireBehavior(!refusedConsentApp.adCallNames().includes("showBanner"), "ads must not be requested without consent");
+  refusedConsentApp.document.dispatch("focusin", { target: field });
+  refusedConsentApp.document.dispatch("focusout", { target: field, relatedTarget: null });
+  requireBehavior(!refusedConsentApp.adCallNames().some((name) => name === "hideBanner" || name === "resumeBanner"), "fields must not touch a banner that was never shown");
 
   // The form was shown and the user did not consent. canRequestAds is absent, as
   // it can be on an error path, so only the status stands between us and an ad.
