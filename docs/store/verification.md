@@ -45,11 +45,16 @@ queries and render the same in a desktop browser.
 - "Налаштування реклами" renders at 320 px as a 48 px quiet button with no
   horizontal overflow (browser, forced visible).
 
+## Signed release bundle (2026-09-18)
+
+`npm run build:android` with the upload keystore in place → 7.1 MB
+`app-release.aab`. `jarsigner -verify` reports `jar verified.`, signed by the
+`upload` alias: RSA 4096, SHA256withRSA, valid until 2054. The bundle carries
+the live ad unit and `AD_AFTER_VISITS=10`.
+
 ## Still open
 
 - Physical hardware, any model.
-- A **signed** release bundle and `jarsigner` saying `jar verified.` — needs
-  the upload keystore.
 - The UMP consent form and the privacy options button on a device. Both need
   the GDPR message published in AdMob, then an EEA test run
   (`debugGeography` or an EEA device).
