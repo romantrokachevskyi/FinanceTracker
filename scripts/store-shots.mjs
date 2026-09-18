@@ -1,8 +1,7 @@
 // Builds the Play Console artwork in docs/store/assets/.
 //
-// Screenshots are real captures from the app running on a device, taken with
-// `adb exec-out screencap -p` (see docs/store/RELEASE.md for the capture
-// session). A phone capture is 1080x2424, which is 2.24:1 and taller than the
+// Screenshots are real captures from the app running on a device, made by
+// scripts/capture-store.mjs into <raw>/<language>/<name>.png. A phone capture is 1080x2424, which is 2.24:1 and taller than the
 // 2:1 the Console accepts, so each one is cropped to 1080x1920 with the status
 // bar and navigation bar trimmed off.
 //
@@ -11,9 +10,10 @@
 // which is why every capture here is well above it.
 
 import { execFile } from "node:child_process";
-import { mkdir, writeFile, readFile } from "node:fs/promises";
+import { access, mkdir, writeFile, readFile, rm } from "node:fs/promises";
 import { promisify } from "node:util";
 import { fileURLToPath, pathToFileURL } from "node:url";
+import { STORE_LANGUAGES, STORE_SHOTS } from "./store-seeds.mjs";
 
 const run = promisify(execFile);
 
@@ -29,7 +29,8 @@ const WIDTH = 1080;
 const HEIGHT = 1920;
 const TOP_TRIM = 140; // status bar
 
-const SCREENSHOTS = ["01-setup", "02-dashboard", "03-checkin", "04-english"];
+const LANGUAGES = Object.keys(STORE_LANGUAGES);
+const SCREENSHOTS = Object.keys(STORE_SHOTS);
 
 async function shoot(url, file, width, height) {
   await run(CHROME, [
@@ -49,21 +50,36 @@ async function dimensions(file) {
   return `${bytes.readUInt32BE(16)}x${bytes.readUInt32BE(20)}`;
 }
 
-await mkdir(OUT, { recursive: true });
-
-for (const name of SCREENSHOTS) {
-  const source = new URL(`${name}.png`, RAW);
-  const page = new URL(`.${name}-crop.html`, OUT);
-  await writeFile(
-    fileURLToPath(page),
-    `<body style="margin:0;width:${WIDTH}px;height:${HEIGHT}px;overflow:hidden">` +
-      `<img src="${source.href}" style="position:absolute;left:0;top:${-TOP_TRIM}px;width:${WIDTH}px">`
-  );
-  const out = new URL(`${name}.png`, OUT);
-  await shoot(page.href, out, WIDTH, HEIGHT);
-  console.log(`${name}.png -> ${await dimensions(out)}`);
+// Chrome renders a missing image as a blank page of the right size, which
+// would silently replace the committed screenshots. Refuse instead.
+for (const language of LANGUAGES) {
+  for (const name of SCREENSHOTS) {
+    try {
+      await access(new URL(`${language}/${name}.png`, RAW));
+    } catch {
+      console.error(`missing raw capture ${fileURLToPath(new URL(`${language}/${name}.png`, RAW))}; run npm run capture:store first`);
+      process.exit(1);
+    }
+  }
 }
 
-const graphic = new URL("feature-graphic.png", OUT);
-await shoot(new URL("feature-graphic.svg", OUT).href, graphic, 1024, 500);
-console.log(`feature-graphic.png -> ${await dimensions(graphic)}`);
+for (const language of LANGUAGES) {
+  const dir = new URL(`${language}/`, OUT);
+  await mkdir(dir, { recursive: true });
+  for (const name of SCREENSHOTS) {
+    const source = new URL(`${language}/${name}.png`, RAW);
+    const page = new URL(`.${name}-crop.html`, dir);
+    await writeFile(
+      fileURLToPath(page),
+      `<body style="margin:0;width:${WIDTH}px;height:${HEIGHT}px;overflow:hidden">` +
+        `<img src="${source.href}" style="position:absolute;left:0;top:${-TOP_TRIM}px;width:${WIDTH}px">`
+    );
+    const out = new URL(`${name}.png`, dir);
+    await shoot(page.href, out, WIDTH, HEIGHT);
+    await rm(page);
+    console.log(`${language}/${name}.png -> ${await dimensions(out)}`);
+  }
+  const graphic = new URL("feature-graphic.png", dir);
+  await shoot(new URL("feature-graphic.svg", dir).href, graphic, 1024, 500);
+  console.log(`${language}/feature-graphic.png -> ${await dimensions(graphic)}`);
+}

@@ -79,13 +79,16 @@ builds. `versionName` changes only for real releases.
 2. **Store settings**: category **Finance**; contact email of your choice
    (shown publicly); website `https://romantrokachevskyi.github.io` — this is
    what points AdMob at `app-ads.txt`.
-3. **Main store listing**: paste `listing-en.md`; add a Ukrainian (uk)
-   translation from `listing-uk.md`. Graphics: `icons/app-icon-512.png`
-   (icon), `assets/feature-graphic.png`, and the four phone screenshots in
-   `assets/`. Screenshots 01–03 show the Ukrainian UI and only 04 the English
-   one, so the English default listing — what most countries see — is mostly
-   Ukrainian until English captures of the setup, dashboard and check-in
-   states exist. Play accepts separate screenshots per listing language.
+3. **Main store listing** — each language gets its own text and graphics:
+
+   | Listing | Text | Feature graphic | Phone screenshots, in order |
+   | --- | --- | --- | --- |
+   | English (en-US), default | `listing-en.md` | `assets/en/feature-graphic.png` | `assets/en/01-setup` … `04-payday` |
+   | Ukrainian (uk) translation | `listing-uk.md` | `assets/uk/feature-graphic.png` | `assets/uk/01-setup` … `04-payday` |
+
+   The app icon, `icons/app-icon-512.png`, is shared. Add the Ukrainian
+   translation first, then open it and replace the graphics it inherited
+   from English.
 4. **App content**: privacy policy URL from the table above, then every
    declaration in `data-safety.md` — Ads, App access (all functionality
    available without login), Target audience, Data safety, Financial features,
@@ -119,18 +122,24 @@ builds. `versionName` changes only for real releases.
 
 ## Regenerating store artwork
 
-The four screenshots are real device captures. To redo them, install the debug
-build, capture each state with `adb exec-out screencap -p > raw/01-setup.png`
-— `01-setup` on a fresh install, `02-dashboard` after creating a plan,
-`03-checkin` after tapping "Оновити баланс" (keyboard dismissed, scrolled to
-top), `04-english` after the EN toggle — then crop with:
+Screenshots are real captures of the debug build on an Android 13+ emulator or
+phone. With the debug APK installed and the device connected:
 
 ```bash
-node scripts/store-shots.mjs <path-to-raw-directory>
+npm run capture:store
 ```
 
-Raw captures are not committed. The same command re-renders
-`feature-graphic.png` from `feature-graphic.svg`.
+```bash
+npm run shots
+```
+
+The first writes raw captures of every shot in `scripts/store-seeds.mjs`, in
+English and Ukrainian, to the gitignored `assets/raw/`. It replaces the app's
+local data on that device and leaves a demo plan behind. Demo dates come from
+the computer's clock, so keep the device in the same time zone. The second
+crops the captures to 1080 × 1920 and renders each language's
+`feature-graphic.svg`; it refuses to run without a full set of raw captures.
+Edit a feature graphic's text in its SVG, never in the PNG.
 
 ## Testing the banner without waiting ten days
 

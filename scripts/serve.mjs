@@ -8,6 +8,7 @@
 import { createServer } from "node:http";
 import { readFile } from "node:fs/promises";
 import { extname } from "node:path";
+import { SEEDS } from "./store-seeds.mjs";
 
 const ROOT = new URL("../", import.meta.url);
 const PORT = Number(process.argv[2] ?? 8080);
@@ -17,41 +18,6 @@ const TYPES = {
   ".webmanifest": "application/manifest+json; charset=utf-8",
   ".png": "image/png",
   ".svg": "image/svg+xml"
-};
-
-function daysFromToday(offset) {
-  const date = new Date();
-  date.setDate(date.getDate() + offset);
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
-  return `${date.getFullYear()}-${month}-${day}`;
-}
-
-function inProgressPlan() {
-  return {
-    balance: 18000,
-    startDate: daysFromToday(-9),
-    salaryDate: daysFromToday(12),
-    currentBalance: 13200,
-    currentBalanceDate: daysFromToday(0),
-    schemaVersion: 2
-  };
-}
-
-const SEEDS = {
-  setup: () => ({ state: null }),
-  dashboard: () => ({ state: inProgressPlan() }),
-  checkin: () => ({ state: inProgressPlan(), open: "showCheckIn" }),
-  payday: () => ({
-    state: {
-      balance: 18000,
-      startDate: daysFromToday(-21),
-      salaryDate: daysFromToday(0),
-      currentBalance: 900,
-      currentBalanceDate: daysFromToday(0),
-      schemaVersion: 2
-    }
-  })
 };
 
 function inject(html, seed) {
