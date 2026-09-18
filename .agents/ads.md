@@ -9,6 +9,13 @@ One Google AdMob banner, anchored bottom-centre, adaptive size. It appears only
 after the user has opened the app on `AD_AFTER_VISITS` (10) separate calendar
 days. On web and in the PWA there are no ads at all — the banner is native-only.
 
+While a text field has focus the banner is hidden (`hideBanner`) and it comes
+back when focus leaves the fields (`resumeBanner`). With the keyboard up the SDK
+re-anchors the banner above it, which on a Pixel 9a put the ad over the field
+being typed in — an accidental-click placement AdMob penalises. A focused text
+field stands in for the keyboard. `hideBanner` reports height 0, so
+`--ad-height` follows without extra code.
+
 Plugin: `@capacitor-community/admob@8.1.0`, reached through
 `window.Capacitor.Plugins.AdMob`. Do not add a bundler to import it; the global
 bridge is what keeps `index.html` a no-build file.
@@ -63,9 +70,15 @@ status is `OBTAINED` or `NOT_REQUIRED`. Gate on the status, not on
 `canRequestAds` alone: an error path that omits that field would otherwise read
 as consent given, and the privacy policy promises the opposite.
 
-The GDPR message and the privacy options form are configured in the AdMob
-console, not in this repo — an unconfigured message means the form never
-appears and consent is never gathered.
+When UMP reports `privacyOptionsRequirementStatus: "REQUIRED"` (EEA, UK,
+Switzerland) the hidden `#adPrivacy` button ("Налаштування реклами" / "Ad
+settings") is shown and opens `showPrivacyOptionsForm()`. Google requires that
+entry point, and the privacy policy names it. It is shown whether or not the
+user allowed ads.
+
+The GDPR message itself is configured in the AdMob console, not in this repo —
+an unconfigured message means the form never appears, consent is never
+gathered, and UMP never asks for the privacy options button.
 
 `showBanner` passes no `npa` flag on purpose. The Mobile Ads SDK reads UMP's
 consent signal itself, which is Google's own guidance. Setting `npa` from the
@@ -89,6 +102,10 @@ to forget in either direction.
 if either reverts to a Google test ID. The mismatch case is why: nothing errors
 at runtime, the banner simply never fills, and that is close to undiagnosable
 from inside the app.
+
+`docs/store/app-ads.txt` must carry the same publisher; the checker enforces it.
+AdMob limits serving until that line is live at the root of the developer
+website listed in Play — see `docs/store/RELEASE.md`.
 
 To test against Google's test units, swap both IDs back together and expect the
 checker to fail until you swap them forward again. Never click your own live

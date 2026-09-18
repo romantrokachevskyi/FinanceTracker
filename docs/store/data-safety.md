@@ -78,7 +78,7 @@ old certificate forward.
 
 The app's own manifest declares one permission, `INTERNET`. The Google Mobile
 Ads SDK merges in eight more. This is the full set in the built manifest,
-verified with the command in `RELEASE.md`:
+verified with the command in `verification.md`:
 
 | Permission | Comes from | Why |
 | --- | --- | --- |

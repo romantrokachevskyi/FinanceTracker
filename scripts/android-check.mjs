@@ -141,6 +141,13 @@ async function checkAdIds(failures, strings) {
   if (unitPublisher === TEST_AD_PUBLISHER || appPublisher === TEST_AD_PUBLISHER) {
     failures.push("Google's test AdMob IDs are still in place, so the app would earn nothing");
   }
+  // AdMob limits serving until the developer site's app-ads.txt names this
+  // publisher. The file is published by hand, so keep its source in step here.
+  const appAds = await readIfPresent("docs/store/app-ads.txt");
+  const expected = `google.com, pub-${unitPublisher}, DIRECT, f08c47fec0942fa0`;
+  if (appAds === null || !appAds.split(/\r?\n/).includes(expected)) {
+    failures.push(`docs/store/app-ads.txt must contain: ${expected}`);
+  }
 }
 
 async function checkArtwork(failures) {
