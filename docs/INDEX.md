@@ -15,3 +15,4 @@ are published pages, not agent docs.
 - [data-safety](store/data-safety.md) — read when answering Play Console declarations or changing what the app or SDK collects
 - [listing-en](store/listing-en.md) / [listing-uk](store/listing-uk.md) — read when editing store listing text
 - [release-notes](store/release-notes.md) — read when preparing a Play release
+- [tester-invite](store/tester-invite.md) — read when recruiting closed-test testers

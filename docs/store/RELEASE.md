@@ -103,7 +103,8 @@ builds. `versionName` changes only for real releases.
 
 1. **Testing → Closed testing**: create a release, upload `app-release.aab`,
    paste the notes from `release-notes.md`, add at least 12 testers by email
-   list, and share the opt-in link.
+   list, and send each the opt-in link with the message in
+   `tester-invite.md`.
 2. For a personal developer account created after 13 November 2023, each new
    app must keep that test running with 12+ opted-in testers for 14 continuous
    days before **Apply for production** unlocks on the app's dashboard. An
@@ -140,11 +141,3 @@ the computer's clock, so keep the device in the same time zone. The second
 crops the captures to 1080 × 1920 and renders each language's
 `feature-graphic.svg`; it refuses to run without a full set of raw captures.
 Edit a feature graphic's text in its SVG, never in the PNG.
-
-## Testing the banner without waiting ten days
-
-Edit the staged copy, never `index.html`: run `node scripts/build-web.mjs`, set
-`AD_AFTER_VISITS=1` and Google's test unit
-`ca-app-pub-3940256099942544/9214589741` in `www/index.html`, then
-`npx cap copy android` and `cd android && ./gradlew.bat assembleDebug`.
-Run `npm run sync:android` afterwards so the real values are staged again.

@@ -113,6 +113,14 @@ To test against Google's test units, swap both IDs back together and expect the
 checker to fail until you swap them forward again. Never click your own live
 ads — AdMob suspends accounts for it.
 
+## Testing the banner without waiting ten days
+
+Edit the staged copy, never `index.html`: run `node scripts/build-web.mjs`, set
+`AD_AFTER_VISITS=1` and Google's test unit
+`ca-app-pub-3940256099942544/9214589741` in `www/index.html`, then
+`npx cap copy android` and `cd android && ./gradlew.bat assembleDebug`.
+Run `npm run sync:android` afterwards so the real values are staged again.
+
 ## Out of scope by decision
 
 Interstitials, rewarded ads, mediation, an ad-free purchase, and any runtime UI
