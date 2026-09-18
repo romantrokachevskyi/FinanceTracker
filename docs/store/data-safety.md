@@ -66,13 +66,14 @@ the Families policy restricts which ad SDKs may be used at all.
 | Controlled substances | None |
 | Gambling or simulated gambling | None |
 | User-generated content or user interaction | None |
-| Shares user location | Yes — approximate, by the ad SDK |
-| Allows purchases | No |
-| Data sharing with third parties | Yes — with Google for advertising |
+| Shares the user's location with other users | No |
+| Allows purchases of digital goods | No |
+| Unrestricted internet access (a browser) | No |
+| Contains ads, if asked | Yes |
 
-The rating outcome may shift from the previous **Everyone / PEGI 3 / USK 0**
-once third-party sharing is declared. Re-run the questionnaire; do not carry the
-old certificate forward.
+Category: **All other app types**. IARC asks about exposure between users, not
+data sent to an ad network — the ad SDK's approximate location and IDs belong in
+Data safety above, not here. Expect the lowest age rating in every region.
 
 ## Permissions justification
 
