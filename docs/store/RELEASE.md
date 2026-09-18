@@ -84,18 +84,20 @@ builds. `versionName` changes only for real releases.
    available without login), Target audience, Data safety, Financial features,
    Advertising ID, Government apps, Health.
 5. **Content rating**: the IARC questionnaire, answers in `data-safety.md`.
-6. **Countries**: Ukraine at minimum. Adding EEA countries is fine now that
-   consent and privacy options are in place, provided step 2 is done.
+6. **Countries**: Ukraine at minimum. Add EEA, UK and Swiss countries only
+   after step 2 is done and the EEA consent run listed as open in
+   `verification.md` has passed.
 
 ## 6. Test track and production (you)
 
 1. **Testing → Closed testing**: create a release, upload `app-release.aab`,
    paste the notes from `release-notes.md`, add at least 12 testers by email
    list, and share the opt-in link.
-2. Personal developer accounts created after November 2023 must keep that test
-   running with 12+ opted-in testers for 14 continuous days before **Apply for
-   production** unlocks. If this account has already published to production,
-   skip straight to a production release.
+2. For a personal developer account created after 13 November 2023, each new
+   app must keep that test running with 12+ opted-in testers for 14 continuous
+   days before **Apply for production** unlocks on the app's dashboard. An
+   earlier published app does not waive it. Organisation accounts, and personal
+   accounts created before that date, may release to production directly.
 3. After production access: **Production → Create release**, promote the same
    bundle, submit for review.
 

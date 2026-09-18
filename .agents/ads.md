@@ -11,10 +11,12 @@ days. On web and in the PWA there are no ads at all — the banner is native-onl
 
 While a text field has focus the banner is hidden (`hideBanner`) and it comes
 back when focus leaves the fields (`resumeBanner`). With the keyboard up the SDK
-re-anchors the banner above it, which on a Pixel 9a put the ad over the field
+re-anchors the banner above it, which on a Pixel 9a emulator (Android 16) put the ad over the field
 being typed in — an accidental-click placement AdMob penalises. A focused text
-field stands in for the keyboard. `hideBanner` reports height 0, so
-`--ad-height` follows without extra code.
+field stands in for the keyboard; a date input does not count, since it opens
+a picker. A field already focused when the banner arrives hides it at once.
+`hideBanner` reports height 0 and `resumeBanner` the real size, so
+`--ad-height` follows both ways without extra code.
 
 Plugin: `@capacitor-community/admob@8.1.0`, reached through
 `window.Capacitor.Plugins.AdMob`. Do not add a bundler to import it; the global

@@ -234,13 +234,22 @@ export async function checkBehavior(source) {
   // ad over the field being typed in. A focused text field is the keyboard.
   const field = { tagName: "INPUT" }, otherField = { tagName: "INPUT" }, button = { tagName: "BUTTON" };
   bannerApp.document.dispatch("focusin", { target: button });
-  requireBehavior(!bannerApp.adCallNames().includes("hideBanner"), "focusing a button must leave the banner up");
+  bannerApp.document.dispatch("focusin", { target: { tagName: "INPUT", type: "date" } });
+  requireBehavior(!bannerApp.adCallNames().includes("hideBanner"), "a button or a date picker must leave the banner up");
   bannerApp.document.dispatch("focusin", { target: field });
   requireBehavior(bannerApp.adCallNames().includes("hideBanner"), "typing into a field must hide the banner");
   bannerApp.document.dispatch("focusout", { target: field, relatedTarget: otherField });
   requireBehavior(!bannerApp.adCallNames().includes("resumeBanner"), "moving between fields must keep the banner hidden");
   bannerApp.document.dispatch("focusout", { target: otherField, relatedTarget: null });
   requireBehavior(bannerApp.adCallNames().includes("resumeBanner"), "leaving the fields must bring the banner back");
+
+  const focusedAtStartApp = createAppHarness(source, activeState, { capacitor: true, ads: { visits: 20, lastVisitDate: localDate() } });
+  focusedAtStartApp.document.activeElement = field;
+  await flush();
+  requireBehavior(focusedAtStartApp.adCallNames().includes("hideBanner"), "a field already focused when the banner arrives must hide it");
+
+  const englishAdPrivacyApp = createAppHarness(source, activeState, { locale: "en" });
+  requireBehavior(englishAdPrivacyApp.element("adPrivacy").textContent === "Ad settings", "the ad settings button must be translated");
 
   const belowThresholdApp = createAppHarness(source, activeState, { capacitor: true, ads: { visits: 8, lastVisitDate: localDate(-1) } });
   await flush();

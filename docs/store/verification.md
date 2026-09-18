@@ -39,7 +39,9 @@ queries and render the same in a desktop browser.
 - Keyboard: before the fix, focusing the balance field re-anchored the banner
   mid-screen, directly over the field. Now the banner hides while a text field
   has focus and returns to the bottom when focus leaves — checked on the
-  emulator and by `scripts/behavior-check.mjs`.
+  emulator and by `scripts/behavior-check.mjs`. Logcat shows the size events
+  that drive `--ad-height`: `{"width":0,"height":0}` after `hideBanner`,
+  `{"width":411,"height":64}` after `resumeBanner`.
 - "Налаштування реклами" renders at 320 px as a 48 px quiet button with no
   horizontal overflow (browser, forced visible).
 
