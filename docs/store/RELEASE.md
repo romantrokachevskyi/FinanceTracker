@@ -23,12 +23,13 @@ to the `/docs` folder: the web app would disappear.
 1. Push `main`. The live policy is whatever `main` holds, and Play reviewers
    compare it with the Data safety answers. Confirm the policy URL shows the
    AdMob section.
-2. Create a public repository named exactly `romantrokachevskyi.github.io`
-   with Pages enabled on `main`, containing `docs/store/app-ads.txt` from this
-   repository as `app-ads.txt` at its root. Confirm
-   `https://romantrokachevskyi.github.io/app-ads.txt` returns that one line.
-   AdMob only crawls the domain root, never `/FinanceTracker/`, and it limits
-   serving until the file verifies.
+2. `app-ads.txt` is served from the separate repository
+   `romantrokachevskyi/romantrokachevskyi.github.io`, at
+   `https://romantrokachevskyi.github.io/app-ads.txt`; its `index.html`
+   forwards the root to `/FinanceTracker/`. AdMob only crawls the domain root,
+   never `/FinanceTracker/`, and limits serving until the file verifies. If the
+   publisher ever changes, update `docs/store/app-ads.txt` here and copy it
+   there — the checker only guards this repository's copy.
 
 ## 2. Configure AdMob (you)
 
