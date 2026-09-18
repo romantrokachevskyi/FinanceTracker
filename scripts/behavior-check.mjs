@@ -113,6 +113,7 @@ export async function checkBehavior(source) {
   const app = createAppHarness(source, activeState, { ads: countedToday });
   requireBehavior(app.context.document.documentElement.lang === "uk", "Ukrainian must remain the default locale");
   requireBehavior(app.element("localeToggle").textContent === "EN", "default locale switch must offer English");
+  requireBehavior(app.element("currentBalance").textContent.endsWith(" ₴"), "Ukrainian locale must show money in hryvnia");
 
   const englishApp = createAppHarness(source, activeState, { locale: "en" });
   requireBehavior(englishApp.context.document.documentElement.lang === "en", "saved English preference must update the document language");
@@ -120,6 +121,7 @@ export async function checkBehavior(source) {
   requireBehavior(englishApp.element("localeToggle").textContent === "UA", "English locale switch must offer Ukrainian");
   requireBehavior(englishApp.element("freshness").textContent.includes("today"), "English locale must translate dynamic freshness text");
   requireBehavior(englishApp.element("daysLeft").textContent.includes("days"), "English locale must translate dynamic day counts");
+  requireBehavior(englishApp.element("currentBalance").textContent.endsWith(" ¤"), "English locale must show the generic currency sign, not hryvnia");
 
   const localeApp = createAppHarness(source, activeState);
   const financialStateBeforeLocaleChange = localeApp.localStorage.getItem("financeTrackerStateV1");
@@ -128,6 +130,7 @@ export async function checkBehavior(source) {
   requireBehavior(localeApp.writesFor("financeTrackerLocaleV1") === 1, "locale switch must write its preference exactly once");
   requireBehavior(localeApp.localStorage.getItem("financeTrackerStateV1") === financialStateBeforeLocaleChange, "locale switch must not rewrite financial state");
   requireBehavior(localeApp.element("currentBalance").textContent.includes("9,000"), "English locale must re-render localized money");
+  requireBehavior(localeApp.element("currentBalance").textContent.endsWith(" ¤"), "locale switch must re-render the currency sign");
 
   const openCheckInApp = createAppHarness(source, activeState);
   openCheckInApp.element("showCheckIn").dispatch("click");

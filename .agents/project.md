@@ -66,6 +66,8 @@ Compatibility rules:
 - Switching locale re-renders dynamic text and localized money, must not write
   the financial state, and must keep an open check-in visible with its
   in-progress value and preview.
+- Money suffix is `translations.<locale>.currency`: `₴` for `uk`, the generic
+  sign `¤` (U+00A4) for `en`, because an English user's currency is unknown.
 - An unrecognized stored locale falls back to Ukrainian without writing storage.
 
 ## Calculation model

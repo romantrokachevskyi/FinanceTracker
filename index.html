@@ -128,7 +128,7 @@
     const AD_BANNER_ID="ca-app-pub-7574415603200995/8280862929";
     const translations={
       uk:{
-        title:"До зарплати",subtitle:"Контролюйте витрати до наступної зарплати",switchLocale:"Switch to English",
+        title:"До зарплати",currency:"₴",subtitle:"Контролюйте витрати до наступної зарплати",switchLocale:"Switch to English",
         dailyLabel:"Можна витрачати щодня",currentBalanceLabel:"Зараз на балансі",plannedBalanceLabel:"За планом на сьогодні",daysLeftLabel:"До зарплати",
         updateBalance:"Оновити баланс",balanceNow:"Баланс зараз",balancePlaceholder:"Наприклад, 8500",saveBalance:"Зберегти баланс",cancel:"Скасувати",newPlan:"Почати новий план",
         paydayTitle:"Настав день зарплати",paydayHint:"Вкажіть новий баланс і наступну дату зарплати.",newPeriod:"Почати новий період",createPlan:"Створити план",
@@ -145,7 +145,7 @@
         updatedAgo:(days,word)=>`Оновлено ${days} ${word} тому`
       },
       en:{
-        title:"Until payday",subtitle:"Keep spending on track until your next payday",switchLocale:"Перемкнути на українську",
+        title:"Until payday",currency:"¤",subtitle:"Keep spending on track until your next payday",switchLocale:"Перемкнути на українську",
         dailyLabel:"Safe to spend each day",currentBalanceLabel:"Current balance",plannedBalanceLabel:"Planned balance today",daysLeftLabel:"Until payday",
         updateBalance:"Update balance",balanceNow:"Current balance",balancePlaceholder:"For example, 8500",saveBalance:"Save balance",cancel:"Cancel",newPlan:"Start a new plan",
         paydayTitle:"It’s payday",paydayHint:"Enter your new balance and next payday.",newPeriod:"Start a new period",createPlan:"Create a plan",
@@ -307,7 +307,7 @@
       }catch(error){}
     }
     function money(value){
-      return new Intl.NumberFormat(currentLocale==="uk"?"uk-UA":"en",{minimumFractionDigits:Number.isInteger(value)?0:2,maximumFractionDigits:2}).format(Math.max(0,value))+" ₴";
+      return new Intl.NumberFormat(currentLocale==="uk"?"uk-UA":"en",{minimumFractionDigits:Number.isInteger(value)?0:2,maximumFractionDigits:2}).format(Math.max(0,value))+" "+t("currency");
     }
     function dayWord(value){
       if(currentLocale==="en")return value===1?"day":"days";
