@@ -68,7 +68,11 @@ Compatibility rules:
   in-progress value and preview.
 - Money suffix is `translations.<locale>.currency`: `₴` for `uk`, the generic
   sign `¤` (U+00A4) for `en`, because an English user's currency is unknown.
-- An unrecognized stored locale falls back to Ukrainian without writing storage.
+- Startup locale, first match wins, and nothing is written: a stored `uk`/`en`
+  choice; `uk` when a plan is already stored (every user saw Ukrainian before
+  detection existed); otherwise `uk` when any device language is Ukrainian or
+  its region is `UA`, else `en`. An unrecognized stored value counts as no
+  choice.
 
 ## Calculation model
 

@@ -5,8 +5,8 @@ Vendor adapters must reference it, not duplicate it.
 
 ## Product
 
-FinanceTracker is an offline-first, Ukrainian-first bilingual, mobile-first web
-app that answers one question: how much can the user safely spend each day until
+FinanceTracker is an offline-first, Ukrainian and English, mobile-first web
+app, distributed worldwide, that answers one question: how much can the user safely spend each day until
 payday? It is free, and one ad banner pays for it.
 
 ## Start here

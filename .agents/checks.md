@@ -45,7 +45,9 @@ hand-written stub, not a real DOM.
 - Add a case with `createAppHarness(source, state, options)` and append a
   `requireBehavior(condition, message)` call inside `checkBehavior`.
 - `options` supports `failReads`, `failWrites`, `locale`, `ads`, `capacitor`,
-  `consentInfo` and `consentAfterForm`.
+  `consentInfo`, `consentAfterForm`, `languages` and `language` (the device's
+  `navigator.languages` / `navigator.language`). `languages` defaults to
+  `["uk-UA"]`, so a case models a Ukrainian phone unless it says otherwise.
 - Build fixtures with `localDate(offset)` so cases stay date-independent.
 - `app.writes` and `app.writesFor(key)` assert exact write counts. They are the
   main guard against eager or duplicated storage rewrites.
