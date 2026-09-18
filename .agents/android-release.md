@@ -58,6 +58,16 @@ Screenshots themselves are captured from the app on a device with
 `adb exec-out screencap -p`, then cropped by `scripts/store-shots.mjs`. See
 `docs/store/RELEASE.md`.
 
+## Store artifacts
+
+All in `docs/store/`: `RELEASE.md` (ordered runbook, account steps included),
+`verification.md` (what ran on which build), `listing-uk.md`/`listing-en.md`,
+`data-safety.md` (every Console declaration), `release-notes.md`,
+`app-ads.txt` (published by hand at the developer-site root), and `assets/`.
+The privacy policy is `docs/privacy/index.html`, live at
+`https://romantrokachevskyi.github.io/FinanceTracker/docs/privacy/` because
+Pages serves the repository root.
+
 ## Signing
 
 The upload keystore and its password belong to the developer and never enter

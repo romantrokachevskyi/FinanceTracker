@@ -22,6 +22,9 @@ hand-written stub, not a real DOM.
 
 - `document.getElementById` returns an auto-created stub for any id. There is no
   element tree, no `querySelector`, no `dataset`, and no real event dispatch.
+- `document.addEventListener` records listeners; a test fires them with
+  `app.document.dispatch(type, event)`. Events do not bubble from elements —
+  pass the `target` (a plain object with `tagName`) yourself.
 - Stub element surface: `hidden`, `value`, `textContent`, `className`,
   `disabled`, `placeholder`, `classList.toggle`, `addEventListener`,
   `setAttribute`/`getAttribute`/`removeAttribute`, `focus`, `requestSubmit`,
@@ -29,7 +32,9 @@ hand-written stub, not a real DOM.
 - Available globals: `document`, `localStorage`, `window.matchMedia`,
   `window.addEventListener`, `navigator`, `Intl`, `Date`. `window.Capacitor`
   exists only when the `capacitor` option is set — its absence is what the web
-  build looks like from inside the harness.
+  build looks like from inside the harness. The fake `AdMob` records
+  `initialize`, `requestConsentInfo`, `showConsentForm`, `showBanner`,
+  `hideBanner`, `resumeBanner`, `showPrivacyOptionsForm` and `addListener`.
 - An API outside that surface works in the browser but fails the check. Extend
   the stub in the same change that introduces the need.
 

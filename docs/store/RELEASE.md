@@ -1,159 +1,133 @@
 # Release runbook
 
-Steps only you can do are marked **you**. Everything else is automated by the
-repository scripts.
+The ordered path from nothing to a published app. Steps marked **you** need
+your accounts or secrets; everything else is a repository command. What has
+been verified, and on what, lives in `verification.md`.
 
-## One-time: create the upload keystore (you)
+Fixed values used below:
 
-Run this yourself. No agent creates, reads, or stores this password.
+| What | Value |
+| --- | --- |
+| Package name | `io.github.romantrokachevskyi.dozarplaty` (permanent) |
+| App name | До зарплати (default, Ukrainian) · Until Payday (English) |
+| Privacy policy URL | `https://romantrokachevskyi.github.io/FinanceTracker/docs/privacy/` |
+| Developer website | `https://romantrokachevskyi.github.io` |
+| AdMob publisher | `pub-7574415603200995` |
+
+GitHub Pages serves this repository from the `main` branch root, which is what
+keeps the web app live, so the policy sits under `/docs/`. Do not switch Pages
+to the `/docs` folder: the web app would disappear.
+
+## 1. Publish the web side (you)
+
+1. Push `main`. The live policy is whatever `main` holds, and Play reviewers
+   compare it with the Data safety answers. Confirm the policy URL shows the
+   AdMob section.
+2. Create a public repository named exactly `romantrokachevskyi.github.io`
+   with Pages enabled on `main`, containing `docs/store/app-ads.txt` from this
+   repository as `app-ads.txt` at its root. Confirm
+   `https://romantrokachevskyi.github.io/app-ads.txt` returns that one line.
+   AdMob only crawls the domain root, never `/FinanceTracker/`, and it limits
+   serving until the file verifies.
+
+## 2. Configure AdMob (you)
+
+In AdMob → **Privacy & messaging**:
+
+1. Create a **European regulations (GDPR)** message for this app, choose
+   Google-certified CMP defaults, and **publish** it. Without a published
+   message the consent form never appears and EEA/UK users get no ads.
+2. Nothing to build for the privacy options entry point: the app already shows
+   an "Налаштування реклами" button whenever UMP asks for it.
+
+## 3. Create the upload keystore (you, once)
+
+No agent creates, reads, or stores this password.
 
 ```bash
 keytool -genkeypair -v -keystore "$HOME/keystores/dozarplaty-upload.jks" -alias upload -keyalg RSA -keysize 4096 -validity 10000
 ```
 
-Keep the `.jks` file **outside this repository**. Then copy
-`android/keystore.properties.example` to `android/keystore.properties` and fill
-in the four values, using the absolute path to the keystore you just created.
+Keep the `.jks` **outside this repository** and back it up with its password.
+Copy `android/keystore.properties.example` to `android/keystore.properties` and
+fill in the four values, with the absolute path to the keystore. Play App
+Signing holds the real signing key; this is only your upload key.
 
-Back up the `.jks` file and its password somewhere durable. Losing them means
-resetting the upload key through Play support.
-
-Play App Signing is enabled at first upload, so Google holds the real app
-signing key and this keystore is only your upload key.
-
-## One-time: enable GitHub Pages (you)
-
-In the repository settings, set Pages to build from the `main` branch,
-`/docs` folder. Confirm that
-`https://romantrokachevskyi.github.io/FinanceTracker/privacy/` loads before
-submitting the listing — Play rejects an unreachable privacy policy URL.
-
-## Build the release bundle
+## 4. Build and verify the bundle
 
 ```bash
 npm run build:android
 ```
 
-The bundle is written to
-`android/app/build/outputs/bundle/release/app-release.aab`.
-
-On macOS or Linux the Gradle command inside that script is `./gradlew
-bundleRelease` rather than `gradlew.bat bundleRelease`.
-
-If `android/keystore.properties` is absent the build still succeeds but
-produces an unsigned bundle, which Play will reject. Verify signing with:
-
 ```bash
 jarsigner -verify -verbose:summary android/app/build/outputs/bundle/release/app-release.aab
 ```
 
+`jar verified.` means signed. `jar is unsigned.` means `keystore.properties`
+was not found — Play rejects that bundle. The first upload uses `versionCode 1`;
+raise it by one for every later upload, including replacements for rejected
+builds. `versionName` changes only for real releases.
+
+## 5. Create the app in Play Console (you)
+
+1. **Create app**: default language Ukrainian, name **До зарплати**, **App**,
+   **Free**. Accept the declarations.
+2. **Store settings**: category **Finance**; contact email of your choice
+   (shown publicly); website `https://romantrokachevskyi.github.io` — this is
+   what points AdMob at `app-ads.txt`.
+3. **Main store listing**: paste `listing-uk.md`; add an English (en-US)
+   translation from `listing-en.md`. Graphics: `icons/app-icon-512.png`
+   (icon), `assets/feature-graphic.png`, and the four phone screenshots in
+   `assets/`.
+4. **App content**: privacy policy URL from the table above, then every
+   declaration in `data-safety.md` — Ads, App access (all functionality
+   available without login), Target audience, Data safety, Financial features,
+   Advertising ID, Government apps, Health.
+5. **Content rating**: the IARC questionnaire, answers in `data-safety.md`.
+6. **Countries**: Ukraine at minimum. Add EEA, UK and Swiss countries only
+   after step 2 is done and the EEA consent run listed as open in
+   `verification.md` has passed.
+
+## 6. Test track and production (you)
+
+1. **Testing → Closed testing**: create a release, upload `app-release.aab`,
+   paste the notes from `release-notes.md`, add at least 12 testers by email
+   list, and share the opt-in link.
+2. For a personal developer account created after 13 November 2023, each new
+   app must keep that test running with 12+ opted-in testers for 14 continuous
+   days before **Apply for production** unlocks on the app's dashboard. An
+   earlier published app does not waive it. Organisation accounts, and personal
+   accounts created before that date, may release to production directly.
+3. After production access: **Production → Create release**, promote the same
+   bundle, submit for review.
+
+## 7. After it is live (you)
+
+1. AdMob → Apps → this app → **Add app store details**, and link it to the
+   Play listing. AdMob then reviews the app; until it passes, fill rates stay
+   low. "Ad failed to load: 3" (no fill) in logcat is expected before that.
+2. Install from Play on a real phone and confirm the banner appears after the
+   tenth day. Do not tap your own ads — AdMob suspends accounts for it.
+
 ## Regenerating store artwork
 
-The four screenshots in `assets/` are real captures from the app running on a
-device, not browser renders. To redo them, install the debug build on a device
-or emulator and capture each state:
-
-```bash
-adb exec-out screencap -p > raw/01-setup.png
-```
-
-Capture `01-setup` on a fresh install, `02-dashboard` after creating a plan,
-`03-checkin` after tapping "Оновити баланс" (dismiss the keyboard and scroll to
-the top first), and `04-english` after tapping the EN toggle. Then crop them to
-the ratio the Console accepts:
+The four screenshots are real device captures. To redo them, install the debug
+build, capture each state with `adb exec-out screencap -p > raw/01-setup.png`
+— `01-setup` on a fresh install, `02-dashboard` after creating a plan,
+`03-checkin` after tapping "Оновити баланс" (keyboard dismissed, scrolled to
+top), `04-english` after the EN toggle — then crop with:
 
 ```bash
 node scripts/store-shots.mjs <path-to-raw-directory>
 ```
 
-Raw captures are not committed; only the cropped results are. The same command
-re-renders `feature-graphic.png` from `feature-graphic.svg`.
+Raw captures are not committed. The same command re-renders
+`feature-graphic.png` from `feature-graphic.svg`.
 
-## Increment for every upload
+## Testing the banner without waiting ten days
 
-Raise `versionCode` by one in `android/app/build.gradle` before each upload to
-Play, including replacements for rejected builds. It never decreases.
-`versionName` is the human-facing string and changes only for real releases.
-
-## Play Console submission (you)
-
-1. Create the app. Default language **Ukrainian**, app name **До зарплати**,
-   type **App**, **Free**.
-2. Store listing: paste from `listing-uk.md`, then add the English translation
-   from `listing-en.md`.
-3. Upload the graphics from `assets/`: four phone screenshots, the feature
-   graphic, and `icons/app-icon-512.png` as the app icon.
-4. Privacy policy URL: the GitHub Pages URL above.
-5. App content: answer every declaration from `data-safety.md`.
-6. Content rating: complete the IARC questionnaire using the same file.
-7. Upload `app-release.aab` to the **closed testing** track and opt in 12
-   testers. The test must run 14 continuous days before you can apply for
-   production access.
-8. Apply for production access, then promote the same bundle.
-
-If this account has already published an app to production, step 7's testing
-requirement does not apply and the bundle goes straight to production.
-
-## Verified
-
-Run on 2026-08-31 against a Pixel 9a emulator, **Android 16 (API 36)**, debug
-build, JDK 17 Temurin.
-
-Passed:
-
-- Debug build succeeds on JDK 17. Capacitor 8.5.0 defaults already gave
-  `compileSdk`/`targetSdk` 36, so no override was needed.
-- `allowBackup="false"` and both extraction rules survive manifest merging.
-- A plan created in the app survives **force-stop and relaunch**. This is the
-  `androidScheme: https` origin contract working.
-- The plan also survives an **in-place update** from `versionCode` 1 to 2.
-- Airplane mode changes nothing for the plan, the calculations or persistence.
-- Edge-to-edge is correct on Android 16: neither the status bar nor the
-  navigation bar overlaps content.
-- The on-screen keyboard pushes the layout without hiding the submit button.
-
-Not a defect, observed while testing: on a tall phone the card sits vertically
-centred with a large gap above it, and below 480 px the page background matches
-the card. Both come from existing media queries in `index.html` and render
-identically in a desktop browser at the same viewport. Packaging did not change
-them.
-
-Still manual, not yet run:
-
-- Any test on physical hardware. Everything above is emulator-only.
-- A signed **release** build and `jarsigner` verification. That needs the upload
-  keystore, which only you can create.
-- The 320 px width pass and the reduced-motion, contrast, and screen-reader
-  checks that `.agents/workflow.md` requires for UI changes. No UI was changed,
-  so these were not re-run.
-
-## Verified — ad banner, 2026-09-18
-
-Debug build on JDK 17 Temurin, `gradlew.bat assembleDebug`, BUILD SUCCESSFUL.
-`@capacitor-community/admob@8.1.0` compiles and packages.
-
-The merged manifest now carries **nine** permissions, not zero. `INTERNET` is
-the app's; the Mobile Ads SDK merges in `ACCESS_NETWORK_STATE`,
-`com.google.android.gms.permission.AD_ID`, the three `ACCESS_ADSERVICES_*`
-Privacy Sandbox permissions, `FOREGROUND_SERVICE` and `WAKE_LOCK`, alongside
-Play services' self-scoped `DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION`. None is
-a runtime permission. `docs/store/data-safety.md` justifies each.
-
-Reproduce with:
-
-```sh
-cd android && ./gradlew.bat assembleDebug
-grep -o 'uses-permission[^/]*' app/build/intermediates/merged_manifest/debug/*/AndroidManifest.xml | sort -u
-```
-
-Not yet run, and required before this ships:
-
-- The banner rendering on a device or emulator, against Google's test ad unit.
-  Nothing here proves an ad actually draws — only that the SDK links.
-- The UMP consent form appearing, which needs a GDPR message configured in the
-  AdMob console and a device in an EEA locale (or `debugGeography`).
-- The layout pass at 320 px and 375 px **with** the banner present, confirming
-  `--ad-height` keeps the submit button clear. This is a UI change, so
-  `.agents/workflow.md` requires the reduced-motion, contrast and screen-reader
-  checks too.
-- Play Console re-declaration: Ads, Data safety, and a fresh IARC rating.
+Edit the staged copy, never `index.html`: run `node scripts/build-web.mjs`, set
+`AD_AFTER_VISITS=1` and Google's test unit
+`ca-app-pub-3940256099942544/9214589741` in `www/index.html`, then
+`npx cap copy android` and `cd android && ./gradlew.bat assembleDebug`.
+Run `npm run sync:android` afterwards so the real values are staged again.

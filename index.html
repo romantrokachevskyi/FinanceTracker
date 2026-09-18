@@ -101,6 +101,7 @@
     <section id="installArea" class="install-area" hidden>
       <button id="installApp" class="install-button" type="button">Додати на головний екран</button>
     </section>
+    <button id="adPrivacy" class="quiet" type="button" hidden>Налаштування реклами</button>
     <p id="statusMessage" class="sr-only" role="status" aria-live="polite"></p>
   </main>
 
@@ -131,7 +132,7 @@
         dailyLabel:"Можна витрачати щодня",currentBalanceLabel:"Зараз на балансі",plannedBalanceLabel:"За планом на сьогодні",daysLeftLabel:"До зарплати",
         updateBalance:"Оновити баланс",balanceNow:"Баланс зараз",balancePlaceholder:"Наприклад, 8500",saveBalance:"Зберегти баланс",cancel:"Скасувати",newPlan:"Почати новий план",
         paydayTitle:"Настав день зарплати",paydayHint:"Вкажіть новий баланс і наступну дату зарплати.",newPeriod:"Почати новий період",createPlan:"Створити план",
-        privateHint:"Дані зберігаються лише на цьому пристрої.",salaryDate:"Наступна зарплата",planBalancePlaceholder:"Наприклад, 30000",retry:"Спробувати ще раз",addHome:"Додати на головний екран",
+        privateHint:"Дані зберігаються лише на цьому пристрої.",salaryDate:"Наступна зарплата",planBalancePlaceholder:"Наприклад, 30000",retry:"Спробувати ще раз",addHome:"Додати на головний екран",adPrivacy:"Налаштування реклами",
         close:"Закрити",iosTitle:"Додати на iPhone або iPad",iosHint:"iOS не дозволяє сайту запустити встановлення автоматично. Це можна зробити в Safari:",
         iosStep1:"Відкрийте цю сторінку в Safari.",iosStep2:"Натисніть кнопку «Поділитися».",iosStep3:"Прокрутіть меню й виберіть «На початковий екран».",iosStep4:"Натисніть «Додати».",understood:"Зрозуміло",
         invalidHint:"Збережені дані пошкоджені. Новий план замінить їх, а оригінал залишиться в резервній копії на цьому пристрої.",
@@ -148,7 +149,7 @@
         dailyLabel:"Safe to spend each day",currentBalanceLabel:"Current balance",plannedBalanceLabel:"Planned balance today",daysLeftLabel:"Until payday",
         updateBalance:"Update balance",balanceNow:"Current balance",balancePlaceholder:"For example, 8500",saveBalance:"Save balance",cancel:"Cancel",newPlan:"Start a new plan",
         paydayTitle:"It’s payday",paydayHint:"Enter your new balance and next payday.",newPeriod:"Start a new period",createPlan:"Create a plan",
-        privateHint:"Data is stored only on this device.",salaryDate:"Next payday",planBalancePlaceholder:"For example, 30000",retry:"Try again",addHome:"Add to Home Screen",
+        privateHint:"Data is stored only on this device.",salaryDate:"Next payday",planBalancePlaceholder:"For example, 30000",retry:"Try again",addHome:"Add to Home Screen",adPrivacy:"Ad settings",
         close:"Close",iosTitle:"Add to iPhone or iPad",iosHint:"iOS does not allow websites to start installation automatically. You can do it in Safari:",
         iosStep1:"Open this page in Safari.",iosStep2:"Tap the Share button.",iosStep3:"Scroll down and choose “Add to Home Screen”.",iosStep4:"Tap “Add”.",understood:"Got it",
         invalidHint:"Saved data is damaged. A new plan will replace it, while the original remains in a backup on this device.",
@@ -185,7 +186,7 @@
       setText("appTitle","title");setText("appSubtitle","subtitle");setText("dailyLabel","dailyLabel");
       setText("currentBalanceLabel","currentBalanceLabel");setText("plannedBalanceLabel","plannedBalanceLabel");setText("daysLeftLabel","daysLeftLabel");
       setText("showCheckIn","updateBalance");setText("checkInTitle","updateBalance");setText("checkInBalanceLabel","balanceNow");
-      el.checkInBalance.placeholder=t("balancePlaceholder");setText("saveCheckIn","saveBalance");setText("cancelCheckIn","cancel");setText("showNewPlan","newPlan");
+      el.checkInBalance.placeholder=t("balancePlaceholder");setText("saveCheckIn","saveBalance");setText("cancelCheckIn","cancel");setText("showNewPlan","newPlan");setText("adPrivacy","adPrivacy");
       setText("paydayTitle","paydayTitle");setText("paydayHint","paydayHint");setText("paydayNewPlan","newPeriod");setText("balanceLabel","balanceNow");
       setText("salaryDateLabel","salaryDate");el.balance.placeholder=t("planBalancePlaceholder");setText("retryStorage","retry");setText("cancelPlan","cancel");
       setText("installApp","addHome");$("closeInstallDialog").setAttribute("aria-label",t("close"));setText("iosInstallTitle","iosTitle");setText("iosInstallHint","iosHint");
@@ -277,6 +278,13 @@
         await adMob.initialize();
         let consent=await adMob.requestConsentInfo();
         if(consent.status==="REQUIRED"&&consent.isConsentFormAvailable)consent=await adMob.showConsentForm();
+        // Where UMP requires it (EEA, UK) the user must be able to revisit the
+        // choice, whether or not it ended up allowing ads.
+        if(consent.privacyOptionsRequirementStatus==="REQUIRED"){
+          const adPrivacy=$("adPrivacy");
+          adPrivacy.hidden=false;
+          adPrivacy.addEventListener("click",()=>adMob.showPrivacyOptionsForm().catch(()=>{}));
+        }
         // Gate on the status UMP always returns, not on canRequestAds alone: an
         // error path that omits the field must not read as "consent given".
         if(consent.status!=="OBTAINED"&&consent.status!=="NOT_REQUIRED")return;
@@ -285,6 +293,17 @@
           document.documentElement.style.setProperty("--ad-height",`${size.height}px`);
         });
         await adMob.showBanner({adId:AD_BANNER_ID,adSize:"ADAPTIVE_BANNER",position:"BOTTOM_CENTER",isTesting:AD_BANNER_ID.startsWith("ca-app-pub-3940256099942544")});
+        // The SDK re-anchors the banner above the keyboard, over the field being
+        // typed in. A focused text field is the keyboard, so hide it meanwhile.
+        // A date input opens a picker, not the keyboard, and keeps focus after.
+        const isTextField=target=>(target?.tagName==="INPUT"&&target.type!=="date")||target?.tagName==="TEXTAREA";
+        document.addEventListener("focusin",event=>{
+          if(isTextField(event.target))adMob.hideBanner().catch(()=>{});
+        });
+        document.addEventListener("focusout",event=>{
+          if(isTextField(event.target)&&!isTextField(event.relatedTarget))adMob.resumeBanner().catch(()=>{});
+        });
+        if(isTextField(document.activeElement))adMob.hideBanner().catch(()=>{});
       }catch(error){}
     }
     function money(value){
