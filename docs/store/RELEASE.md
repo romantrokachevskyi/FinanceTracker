@@ -82,7 +82,10 @@ builds. `versionName` changes only for real releases.
 3. **Main store listing**: paste `listing-en.md`; add a Ukrainian (uk)
    translation from `listing-uk.md`. Graphics: `icons/app-icon-512.png`
    (icon), `assets/feature-graphic.png`, and the four phone screenshots in
-   `assets/`.
+   `assets/`. Screenshots 01–03 show the Ukrainian UI and only 04 the English
+   one, so the English default listing — what most countries see — is mostly
+   Ukrainian until English captures of the setup, dashboard and check-in
+   states exist. Play accepts separate screenshots per listing language.
 4. **App content**: privacy policy URL from the table above, then every
    declaration in `data-safety.md` — Ads, App access (all functionality
    available without login), Target audience, Data safety, Financial features,

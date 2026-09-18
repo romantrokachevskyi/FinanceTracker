@@ -2,7 +2,7 @@
   "name": "financetracker",
   "version": "1.0.0",
   "private": true,
-  "description": "Offline Ukrainian-first daily spending allowance app",
+  "description": "Offline-first daily spending allowance app in Ukrainian and English",
   "type": "module",
   "scripts": {
     "check": "node scripts/check.mjs",

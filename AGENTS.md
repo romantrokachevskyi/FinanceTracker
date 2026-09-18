@@ -5,9 +5,9 @@ Vendor adapters must reference it, not duplicate it.
 
 ## Product
 
-FinanceTracker is an offline-first, Ukrainian and English, mobile-first web
-app, distributed worldwide, that answers one question: how much can the user safely spend each day until
-payday? It is free, and one ad banner pays for it.
+FinanceTracker is an offline-first, Ukrainian and English, mobile-first web app,
+distributed worldwide, that answers one question: how much can the user safely
+spend each day until payday? It is free, and one ad banner pays for it.
 
 ## Start here
 
@@ -21,6 +21,8 @@ payday? It is free, and one ad banner pays for it.
    anything touching the privacy posture or store declarations.
 6. Inspect the relevant code; do not rely on these notes when the code can
    answer a question directly.
+
+`docs/INDEX.md` lists every doc, including the store and release files.
 
 ## Non-negotiable contracts
 
